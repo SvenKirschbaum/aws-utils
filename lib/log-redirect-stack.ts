@@ -1,12 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import {CfnOutput, Duration, Fn} from 'aws-cdk-lib';
+import {Construct} from 'constructs';
 import {DomainName, HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {HttpLambdaIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {ARecord, HostedZone, PublicHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
-import {CfnOutput, Duration, Fn} from "aws-cdk-lib";
 import {Certificate, CertificateValidation} from "aws-cdk-lib/aws-certificatemanager";
-import {Architecture, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {Secret} from "aws-cdk-lib/aws-secretsmanager";
 import {ApiGatewayv2DomainProperties} from "aws-cdk-lib/aws-route53-targets";
@@ -75,6 +75,8 @@ export class LogRedirectStack extends cdk.Stack {
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),
+      tracing: Tracing.ACTIVE,
+      memorySize: 1769,
       environment: {
         'OAUTH_SECRET_ARN': secret.secretArn
       }
@@ -92,6 +94,8 @@ export class LogRedirectStack extends cdk.Stack {
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),
+      tracing: Tracing.ACTIVE,
+      memorySize: 1769,
       environment: {
         'OAUTH_SECRET_ARN': secret.secretArn
       }
@@ -100,7 +104,7 @@ export class LogRedirectStack extends cdk.Stack {
 
     this.httpApi.addRoutes({
       path: '/mythplus',
-      integration:  new HttpLambdaIntegration('MythIntegration', mythFunction)
+      integration:  new HttpLambdaIntegration('MythIntegration', mythFunction),
     })
 
   }

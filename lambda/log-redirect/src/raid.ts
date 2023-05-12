@@ -4,6 +4,9 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
 import {getLatestRaidReport, REPORT_URL_PREFIX} from "./wcl";
+import {captureLambdaHandler, Tracer} from "@aws-lambda-powertools/tracer";
+import {injectLambdaContext} from "@aws-lambda-powertools/logger";
+import {logger, tracer} from "./util";
 
 const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
     const reportId = await getLatestRaidReport();
@@ -23,6 +26,8 @@ const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<AP
 }
 
 export const handler = middy(lambdaHandler)
+    .use(captureLambdaHandler(tracer))
+    .use(injectLambdaContext(logger))
     .use(httpErrorHandlerMiddleware())
     .use(errorLogger())
     .use(httpHeaderNormalizer())

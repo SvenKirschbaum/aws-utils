@@ -2,6 +2,8 @@
   "name": "util-lambda",
   "version": "1.0.0",
   "dependencies": {
+    "@aws-lambda-powertools/logger": "1.8.0",
+    "@aws-lambda-powertools/tracer": "1.8.0",
     "@middy/core": "4.4.1",
     "@middy/http-header-normalizer": "4.4.1",
     "@middy/http-error-handler": "4.4.1",

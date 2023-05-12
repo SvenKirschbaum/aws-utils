@@ -2,6 +2,7 @@
 import {gql, GraphQLClient} from "graphql-request";
 import {GetSecretValueCommand, SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import jwtDecode from "jwt-decode";
+import {tracer} from "./util";
 
 let reports: Report[];
 
@@ -41,7 +42,7 @@ interface ReportList {
 export async function getReports() {
     if(reports) return reports;
 
-    const client = new SecretsManagerClient({region: process.env.AWS_REGION});
+    const client = tracer.captureAWSv3Client(new SecretsManagerClient({region: process.env.AWS_REGION}));
     const token = await client.send(new GetSecretValueCommand({
         SecretId: process.env.OAUTH_SECRET_ARN
     }));
