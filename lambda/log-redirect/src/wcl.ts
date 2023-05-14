@@ -3,8 +3,10 @@ import {gql, GraphQLClient} from "graphql-request";
 import {GetSecretValueCommand, SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import jwtDecode from "jwt-decode";
 import {tracer} from "./util";
+import {DateTime} from "luxon";
 
 let reports: Report[];
+let reportsAge: DateTime;
 
 //Static values
 const gqlEndpoint = 'https://www.warcraftlogs.com/api/v2/user';
@@ -14,6 +16,7 @@ const gqlQuery = gql`
             reports(userID: $userId, limit: 10) {
                 data {
                     code
+                    visibility
                     fights {
                         difficulty
                         keystoneLevel
@@ -25,7 +28,8 @@ const gqlQuery = gql`
 `;
 
 interface Report {
-    code:string,
+    code: string,
+    visibility: 'public' | 'private' | 'unlisted',
     fights: {
         difficulty: number
         keystoneLevel: number | null
@@ -40,7 +44,7 @@ interface ReportList {
 }
 
 export async function getReports() {
-    if(reports) return reports;
+    if(reports && reportsAge.diffNow().as('second') <= 300) return reports;
 
     const client = tracer.captureAWSv3Client(new SecretsManagerClient({region: process.env.AWS_REGION}));
     const token = await client.send(new GetSecretValueCommand({
@@ -62,8 +66,9 @@ export async function getReports() {
         userId
     });
 
-    reports = response.reportData.reports.data;
-    return response.reportData.reports.data;
+    reports = response.reportData.reports.data.filter(value => value.visibility != 'private');
+    reportsAge = DateTime.now();
+    return reports;
 }
 
 export async function getRaidReports() {
