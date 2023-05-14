@@ -17,5 +17,6 @@ new CIStack(app, 'CIStack', {
 
 new LogRedirectStack(app, 'LogRedirectStack', {
     domainName: 'logs.theramo.re',
+    wclTokenSecretName: 'wcl-user-token',
     env
 });

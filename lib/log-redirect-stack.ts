@@ -12,7 +12,8 @@ import {Secret} from "aws-cdk-lib/aws-secretsmanager";
 import {ApiGatewayv2DomainProperties} from "aws-cdk-lib/aws-route53-targets";
 
 interface LogRedirectStackProps extends cdk.StackProps {
-  domainName: string
+  domainName: string,
+  wclTokenSecretName: string,
 }
 
 export class LogRedirectStack extends cdk.Stack {
@@ -65,9 +66,7 @@ export class LogRedirectStack extends cdk.Stack {
   }
 
   private createApiRoutes() {
-    const secret = new Secret(this, 'UserAuthToken', {
-      description: 'User WCL OAuth Token'
-    })
+    const secret = Secret.fromSecretNameV2(this, 'UserAuthToken', this.props.wclTokenSecretName);
 
     const raidFunction = new NodejsFunction(this, 'RaidFunction', {
       entry: 'lambda/log-redirect/src/raid.ts',
