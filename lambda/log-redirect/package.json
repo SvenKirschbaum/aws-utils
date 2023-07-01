@@ -2,22 +2,22 @@
   "name": "util-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "1.9.0",
-    "@aws-lambda-powertools/tracer": "1.9.0",
+    "@aws-lambda-powertools/logger": "1.11.0",
+    "@aws-lambda-powertools/tracer": "1.11.0",
     "@middy/core": "4.5.2",
     "@middy/http-header-normalizer": "4.5.2",
     "@middy/http-error-handler": "4.5.2",
     "@middy/http-response-serializer": "4.5.2",
     "@middy/error-logger": "4.5.2",
-    "@aws-sdk/client-secrets-manager": "3.350.0",
+    "@aws-sdk/client-secrets-manager": "3.363.0",
     "graphql-request": "6.1.0",
     "jwt-decode": "3.1.2",
     "luxon": "3.3.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.117",
+    "@types/aws-lambda": "8.10.119",
     "@types/http-errors": "2.0.1",
     "@types/luxon": "3.3.0",
-    "typescript": "5.1.3"
+    "typescript": "5.1.6"
   }
 }
