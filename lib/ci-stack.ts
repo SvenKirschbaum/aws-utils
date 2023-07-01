@@ -12,7 +12,7 @@ export class CIStack extends Stack {
     private createUtilBuild() {
         new codebuild.Project(this, 'Build', {
             source: codebuild.Source.gitHub({
-                owner: 'fallobst22',
+                owner: 'SvenKirschbaum',
                 repo: 'aws-utils',
                 webhook: true,
                 webhookFilters: [
