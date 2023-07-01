@@ -15,7 +15,8 @@ const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<AP
         return {
             statusCode: 302,
             headers: {
-                'Location': REPORT_URL_PREFIX + reportId
+                'Location': REPORT_URL_PREFIX + reportId,
+                'Cache-Control': 'public, max-age 300'
             }
         }
     } else {
