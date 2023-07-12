@@ -6,7 +6,7 @@ import {tracer} from "./util";
 import {DateTime} from "luxon";
 
 let reports: Report[];
-let reportsAge: DateTime;
+export let reportsAge: DateTime;
 
 //Static values
 const gqlEndpoint = 'https://www.warcraftlogs.com/api/v2/user';
@@ -44,7 +44,7 @@ interface ReportList {
 }
 
 export async function getReports() {
-    if(reports && reportsAge.diffNow().as('second') <= 300) return reports;
+    if(reports && DateTime.now().diff(reportsAge).as('second') < 300) return reports;
 
     const client = tracer.captureAWSv3Client(new SecretsManagerClient({region: process.env.AWS_REGION}));
     const token = await client.send(new GetSecretValueCommand({

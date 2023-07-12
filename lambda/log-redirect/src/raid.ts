@@ -3,7 +3,7 @@ import middy from "@middy/core";
 import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
-import {getLatestRaidReport, REPORT_URL_PREFIX} from "./wcl";
+import {getLatestRaidReport, REPORT_URL_PREFIX, reportsAge} from "./wcl";
 import {captureLambdaHandler, Tracer} from "@aws-lambda-powertools/tracer";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger";
 import {logger, tracer} from "./util";
@@ -16,7 +16,7 @@ const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<AP
             statusCode: 302,
             headers: {
                 'Location': REPORT_URL_PREFIX + reportId,
-                'Cache-Control': 'public, max-age 300'
+                'Expires': reportsAge.plus({minute: 5}).toHTTP() as string
             }
         }
     } else {
