@@ -10,45 +10,20 @@ import {
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
-import {Certificate, CertificateValidation} from "aws-cdk-lib/aws-certificatemanager";
 import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
 import {R53DelegationInfo} from "./constructs/R53DelegationRole";
-import {RecordType} from "aws-cdk-lib/aws-route53";
+import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
+import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
+import {Role} from "aws-cdk-lib/aws-iam";
 
 export interface DomainPlaceholderStackProps extends StackProps {
     domainName: string,
     dnsDelegation: R53DelegationInfo
 }
-
-class DomainPlaceholderUSEast1Stack extends Stack {
-    readonly certificate: Certificate;
-
-    constructor(scope: Construct, id: string, props: DomainPlaceholderStackProps) {
-        super(scope, id, props);
-
-        this.certificate = new Certificate(this, 'Certificate', {
-            domainName: props.domainName,
-            //Note: This requires manual intervention to deploy
-            validation: CertificateValidation.fromDns(),
-        });
-    }
-}
 export class DomainPlaceholderStack extends Stack {
 
     constructor(scope: Construct, id: string, props: DomainPlaceholderStackProps) {
-        super(scope, id, {
-            ...props,
-            crossRegionReferences: true
-        });
-
-        const globalResources = new DomainPlaceholderUSEast1Stack(scope, 'DomainPlaceholderUSEast1Stack', {
-            ...props,
-            crossRegionReferences: true,
-            env: {
-                account: props.env?.account,
-                region: 'us-east-1'
-            }
-        });
+        super(scope, id, props);
 
         const bucket = new Bucket(this, 'Bucket', {});
 
@@ -57,8 +32,20 @@ export class DomainPlaceholderStack extends Stack {
             sources: [Source.asset('./domain-placeholder')]
         });
 
+        const certificate = new DnsValidatedCertificate(this, 'Certificate', {
+            hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+                hostedZoneId: props.dnsDelegation.hostedZoneId,
+                zoneName: props.domainName
+            }),
+            domainName: props.domainName,
+            validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + props.dnsDelegation.account + ':role/' + props.dnsDelegation.roleName, {
+                mutable: false
+            }),
+            certificateRegion: 'us-east-1'
+        })
+
         const distribution = new Distribution(this, 'Distribution', {
-            certificate: globalResources.certificate,
+            certificate,
             domainNames: [props.domainName],
             httpVersion: HttpVersion.HTTP2_AND_3,
             defaultRootObject: 'index.html',
