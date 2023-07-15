@@ -11,9 +11,13 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {Certificate, CertificateValidation} from "aws-cdk-lib/aws-certificatemanager";
+import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
+import {R53DelegationInfo} from "./constructs/R53DelegationRole";
+import {RecordType} from "aws-cdk-lib/aws-route53";
 
 export interface DomainPlaceholderStackProps extends StackProps {
-    domainName: string
+    domainName: string,
+    dnsDelegation: R53DelegationInfo
 }
 
 class DomainPlaceholderUSEast1Stack extends Stack {
@@ -91,9 +95,30 @@ export class DomainPlaceholderStack extends Stack {
             },
         });
 
-        new CfnOutput(this, 'DistributionDomainName', {
-            exportName: 'DistributionDomainName',
-            value: distribution.distributionDomainName
+        new CrossAccountRoute53RecordSet(this, 'DNSRecords', {
+            delegationRoleName: props.dnsDelegation.roleName,
+            delegationRoleAccount: props.dnsDelegation.account,
+            hostedZoneId: props.dnsDelegation.hostedZoneId,
+            resourceRecordSets: [
+                {
+                    Name: `kirschbaum.cloud`,
+                    Type: RecordType.A,
+                    AliasTarget: {
+                        DNSName: distribution.distributionDomainName,
+                        HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
+                        EvaluateTargetHealth: false,
+                    },
+                },
+                {
+                    Name: `kirschbaum.cloud`,
+                    Type: RecordType.AAAA,
+                    AliasTarget: {
+                        DNSName: distribution.distributionDomainName,
+                        HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
+                        EvaluateTargetHealth: false,
+                    },
+                }
+            ],
         });
     }
 }

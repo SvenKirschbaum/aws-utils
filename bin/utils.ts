@@ -32,5 +32,10 @@ new LogRedirectStack(app, 'LogRedirectStack', {
 
 new DomainPlaceholderStack(app, 'DomainPlaceholderStack', {
     domainName: 'kirschbaum.cloud',
+    dnsDelegation: {
+        account: '212836051001',
+        roleName: 'DomainPlaceholderDnsDelegationRole',
+        hostedZoneId: 'Z07030592KWVVKAJQF666'
+    },
     env
 })

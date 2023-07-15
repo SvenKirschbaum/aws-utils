@@ -1,27 +1,43 @@
-import {Duration, Stack, StackProps} from "aws-cdk-lib";
+import {CfnOutput, Duration, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {
     AaaaRecord,
     ARecord,
     PublicHostedZone,
-    RecordSet,
-    RecordTarget,
-    ZoneDelegationRecord
+    RecordTarget, RecordType,
 } from "aws-cdk-lib/aws-route53";
+import {R53DelegationRole} from "./constructs/R53DelegationRole";
+import {AccountPrincipal} from "aws-cdk-lib/aws-iam";
 
 export class RootDnsStack extends Stack {
 
     constructor(scope: Construct, id: string, props: StackProps) {
         super(scope, id, props);
 
-        // WARNING: The Zone has been manually created with a reusable delegation set.
-        // Further zones should follow the same procedure, to use the same white-label nameservers.
-        const zone = new PublicHostedZone(this, 'kirschbaum.cloud', {
+        // WARNING: The Zone has been manually created with a reusable delegation set, and DNSSEC enabled.
+        // Further zones should follow the same procedure, and use the same white-label nameservers.
+        const kirschbaumCloudHostedZone = new PublicHostedZone(this, 'kirschbaum.cloud', {
             zoneName: 'kirschbaum.cloud',
             caaAmazon: true,
         });
 
-        this.createRootNameserverRecords(zone);
+        this.createRootNameserverRecords(kirschbaumCloudHostedZone);
+
+        new R53DelegationRole(this, 'DomainPlaceholderDnsDelegation', {
+            zone: kirschbaumCloudHostedZone,
+            assumedBy: new AccountPrincipal('362408963076'),
+            roleName: 'DomainPlaceholderDnsDelegationRole',
+            records: [
+                {
+                    types: [RecordType.A, RecordType.AAAA],
+                    domains: ['kirschbaum.cloud']
+                },
+                {
+                    types: [RecordType.CNAME],
+                    domains: ['_*.kirschbaum.cloud']
+                }
+            ]
+        });
     }
 
     private createRootNameserverRecords(zone: PublicHostedZone) {
