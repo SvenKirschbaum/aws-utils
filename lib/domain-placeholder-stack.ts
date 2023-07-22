@@ -11,14 +11,14 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
-import {R53DelegationInfo} from "./constructs/R53DelegationRole";
+import {R53DelegationRoleInfo} from "./constructs/R53DelegationRole";
 import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
 import {Role} from "aws-cdk-lib/aws-iam";
 
 export interface DomainPlaceholderStackProps extends StackProps {
     domainName: string,
-    dnsDelegation: R53DelegationInfo
+    dnsDelegation: R53DelegationRoleInfo
 }
 export class DomainPlaceholderStack extends Stack {
 
