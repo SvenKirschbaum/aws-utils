@@ -9,14 +9,14 @@
     "@middy/http-error-handler": "4.6.2",
     "@middy/http-response-serializer": "4.6.2",
     "@middy/error-logger": "4.6.2",
-    "@aws-sdk/client-secrets-manager": "3.409.0",
+    "@aws-sdk/client-secrets-manager": "3.414.0",
     "graphql-request": "6.1.0",
     "jwt-decode": "3.1.2",
     "luxon": "3.4.3"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.119",
-    "@types/http-errors": "2.0.1",
+    "@types/aws-lambda": "8.10.121",
+    "@types/http-errors": "2.0.2",
     "@types/luxon": "3.3.2",
     "typescript": "5.2.2"
   }
