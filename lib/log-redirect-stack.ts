@@ -15,10 +15,10 @@ import {
   ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {HttpOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
-import {R53DelegationRoleInfo} from "./constructs/R53DelegationRole";
 import {Role} from "aws-cdk-lib/aws-iam";
-import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
+import {R53DelegationRoleInfo} from "./constructs/util";
+import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
 
 export interface LogRedirectStackProps extends cdk.StackProps {
   domainName: string,

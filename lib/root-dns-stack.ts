@@ -1,12 +1,11 @@
-import {CfnOutput, CfnResource, Duration, Stack, StackProps} from "aws-cdk-lib";
+import {CfnResource, Duration, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {
     AaaaRecord,
-    ARecord, CaaAmazonRecord, CaaRecord, CaaTag, CfnDNSSEC, CfnHostedZone, CfnKeySigningKey, IPublicHostedZone,
+    ARecord, CaaAmazonRecord, CaaRecord, CaaTag, CfnDNSSEC, CfnKeySigningKey, IPublicHostedZone,
     PublicHostedZone,
-    RecordTarget, RecordType, SrvRecord, TxtRecord, ZoneDelegationRecord,
+    RecordTarget, RecordType, SrvRecord, TxtRecord,
 } from "aws-cdk-lib/aws-route53";
-import {R53DelegationRole, R53DelegationUser} from "./constructs/R53DelegationRole";
 import {AccountPrincipal} from "aws-cdk-lib/aws-iam";
 import {
     DEFAULT_TTL,
@@ -15,6 +14,7 @@ import {
     GoogleMailRecords,
     LetsencryptCAARecord
 } from "./constructs/CommonRecords";
+import {CrossAccountRoute53Role, Route53User} from "@fallobst22/cdk-cross-account-route53";
 
 export interface RootDnsProps extends StackProps {
     domains: string[],
@@ -43,7 +43,7 @@ export class RootDnsStack extends Stack {
         this.createGrillteller42DeRecords(hostedZones['grillteller42.de']);
         this.createTrigardonRgDeRecords(hostedZones['trigardon-rg.de']);
 
-        new R53DelegationRole(this, 'DomainPlaceholderDnsDelegation', {
+        new CrossAccountRoute53Role(this, 'DomainPlaceholderDnsDelegation', {
             zone: hostedZones['kirschbaum.cloud'],
             assumedBy: new AccountPrincipal('362408963076'),
             roleName: 'DomainPlaceholderDnsDelegationRole',
@@ -59,7 +59,7 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationRole(this, 'LogsDnsDelegation', {
+        new CrossAccountRoute53Role(this, 'LogsDnsDelegation', {
             zone: hostedZones['theramo.re'],
             assumedBy: new AccountPrincipal('362408963076'),
             roleName: 'LogsDnsDelegationRole',
@@ -75,7 +75,7 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationUser(this, 'extGWDelegation', {
+        new Route53User(this, 'extGWDelegation', {
             zone: hostedZones['kirschbaum.me'],
             secretName: 'extGw-Accesskey',
             records: [
@@ -86,7 +86,7 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationUser(this, 'homeDelegation', {
+        new Route53User(this, 'homeDelegation', {
             zone: hostedZones['kirschbaum.me'],
             secretName: 'home-Accesskey',
             records: [
