@@ -9,7 +9,7 @@ import {
 import {AccountPrincipal} from "aws-cdk-lib/aws-iam";
 import {
     DEFAULT_TTL,
-    E12_SERVER_IPV4, E12_SERVER_IPV6,
+    E12_SERVER_IPV4, E12_SERVER_IPV6, E12MonitoringRecord,
     E12ServerRecord,
     GoogleMailRecords,
     LetsencryptCAARecord
@@ -180,6 +180,14 @@ export class RootDnsStack extends Stack {
         new E12ServerRecord(zone, 'E12Wild', {
             zone,
             name: '*'
+        });
+        new E12MonitoringRecord(zone, 'E12MonitoringRoot', {
+            zone,
+            name: 'monitoring'
+        });
+        new E12MonitoringRecord(zone, 'E12MonitoringWild', {
+            zone,
+            name: '*.monitoring'
         });
         new ARecord(zone, 'Ipv4Record', {
             zone,
