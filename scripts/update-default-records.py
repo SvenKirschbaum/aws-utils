@@ -2,11 +2,18 @@ import boto3
 
 client = boto3.client('route53')
 
-response = client.list_hosted_zones()
-if response['IsTruncated']:
-    raise Exception('Requires pagination')
+# response = client.list_hosted_zones()
+# if response['IsTruncated']:
+#     raise Exception('Requires pagination')
+#
+# zones = response['HostedZones']
 
-zones = response['HostedZones']
+# zones = [
+#     {
+#         'Id': '/hostedzone/Z0390539TUL47Q5F7NRR',
+#         'Name': 'westerwald-esport.de.'
+#     },
+# ]
 
 for zone in zones:
     client.change_resource_record_sets(

@@ -26,6 +26,7 @@ new RootDnsStack(app, 'RootDns', {
         'markus-dope.de',
         'grillteller42.de',
         'trigardon-rg.de',
+        'westerwald-esport.de',
     ],
     route53CMKarn: "arn:aws:kms:us-east-1:212836051001:key/e5898e64-5730-47d0-a471-728136cf6d09",
     env: {

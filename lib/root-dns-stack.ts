@@ -42,6 +42,7 @@ export class RootDnsStack extends Stack {
         this.createMarkusDopeRecords(hostedZones['markus-dope.de']);
         this.createGrillteller42DeRecords(hostedZones['grillteller42.de']);
         this.createTrigardonRgDeRecords(hostedZones['trigardon-rg.de']);
+        this.createWesterwaldEsportDeRecords(hostedZones['westerwald-esport.de']);
 
         new CrossAccountRoute53Role(this, 'DomainPlaceholderDnsDelegation', {
             zone: hostedZones['kirschbaum.cloud'],
@@ -421,6 +422,19 @@ export class RootDnsStack extends Stack {
                     hostName: 'server.elite12.de'
                 }
             ]
+        });
+    }
+
+    private createWesterwaldEsportDeRecords(zone: PublicHostedZone) {
+        new E12ServerRecord(zone, 'E12Root', {
+            zone
+        });
+        new E12ServerRecord(zone, 'E12Wild', {
+            zone,
+            name: '*'
+        });
+        new LetsencryptCAARecord(zone, 'CAA', {
+            zone
         });
     }
 }
