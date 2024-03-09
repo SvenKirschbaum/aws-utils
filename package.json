@@ -23,7 +23,7 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.114.1-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.114.1-alpha.0",
-    "@fallobst22/cdk-cross-account-route53": "^0.0.1",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.2",
     "@trautonen/cdk-dns-validated-certificate": "0.0.46",
     "aws-cdk-lib": "2.131.0",
     "constructs": "10.3.0",
