@@ -1,4 +1,4 @@
-import {Aws, CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
+import {CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {
     AaaaRecord,
@@ -75,7 +75,7 @@ class DnsStackUSEast1ResourcesStack extends Stack {
     }
 }
 
-export class DnsStack extends Stack {
+export class DNSStack extends Stack {
 
     constructor(scope: Construct, id: string, props: RootDnsProps) {
         super(scope, id, {
