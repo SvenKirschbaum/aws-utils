@@ -3,8 +3,10 @@ import middy from "@middy/core";
 import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
-import {captureLambdaHandler, Tracer} from "@aws-lambda-powertools/tracer";
-import {injectLambdaContext, Logger} from "@aws-lambda-powertools/logger";
+import {Tracer} from "@aws-lambda-powertools/tracer";
+import {Logger} from "@aws-lambda-powertools/logger";
+import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
+import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
 import httpContentNegotiation from '@middy/http-content-negotiation'
 import httpJsonBodyParserMiddleware from '@middy/http-json-body-parser'
 import httpResponseSerializerMiddleware from '@middy/http-response-serializer'
