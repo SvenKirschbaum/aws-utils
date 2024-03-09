@@ -2,6 +2,9 @@
 
 A repository for some micro cloud-based utility projects that are too small to have their own repository.
 
+## Manual build
+npx cdk synth --app "npx ts-node --prefer-ts-exts bin/<app>.ts"
+
 ## Reusable Delegation Set
 
 ```
