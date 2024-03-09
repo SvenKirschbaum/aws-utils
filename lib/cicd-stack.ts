@@ -34,7 +34,8 @@ export class CICDStack extends Stack {
                         "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
                         "token.actions.githubusercontent.com:sub": "repo:SvenKirschbaum/aws-utils:ref:refs/heads/master",
                     }
-                }
+                },
+                "sts:AssumeRoleWithWebIdentity"
             ),
         });
 
