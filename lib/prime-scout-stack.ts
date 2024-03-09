@@ -5,7 +5,7 @@ import {Construct} from "constructs";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
 import {HostedZone, IHostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {Role} from "aws-cdk-lib/aws-iam";
-import {CorsHttpMethod, HttpApi, HttpMethod} from "@aws-cdk/aws-apigatewayv2-alpha";
+import {CorsHttpMethod, HttpApi, HttpMethod} from "aws-cdk-lib/aws-apigatewayv2";
 import {
     AllowedMethods, CacheHeaderBehavior,
     CachePolicy,
@@ -21,7 +21,7 @@ import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deploym
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
-import {HttpLambdaIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 export interface PrimeScoutStackProps extends cdk.StackProps {
     domainName: string,

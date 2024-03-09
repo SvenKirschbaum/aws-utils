@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import {Duration, Fn} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {HttpLambdaIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {HttpApi} from "aws-cdk-lib/aws-apigatewayv2";
+import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
