@@ -29,7 +29,7 @@ export class DomainPlaceholderStack extends Stack {
 
         new BucketDeployment(this, 'BucketDeployment', {
             destinationBucket: bucket,
-            sources: [Source.asset('./domain-placeholder')]
+            sources: [Source.asset('./frontend/domain-placeholder')]
         });
 
         const certificate = new DnsValidatedCertificate(this, 'Certificate', {

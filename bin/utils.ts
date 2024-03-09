@@ -4,19 +4,28 @@ import * as cdk from 'aws-cdk-lib';
 import { LogRedirectStack } from '../lib/log-redirect-stack';
 import {CIStack} from "../lib/ci-stack";
 import {DomainPlaceholderStack} from "../lib/domain-placeholder-stack";
-import {RootDnsStack} from "../lib/root-dns-stack";
+import {DnsStack} from "../lib/dns-stack";
+import {PrimeScoutStack} from "../lib/prime-scout-stack";
+
+const utilAccountID = '362408963076';
+const dnsAccountID = '058264224454';
 
 const app = new cdk.App();
 
-const env = {
+const utilAccountEnv = {
     region: 'eu-central-1',
-    account: '362408963076'
+    account: utilAccountID
 }
 
-new RootDnsStack(app, 'RootDns', {
+const ciStack = new CIStack(app, 'CIStack', {
+    env: utilAccountEnv
+});
+
+new DnsStack(app, 'DNSStack', {
     // WARNING: The Zones have been manually created with a reusable delegation set.
     // Further zones should follow the same procedure, to use the same white-label nameservers.
-    // The update-default-records script can be used to update the SOA and NS records.
+    // The create-hosted-zone script can be used to create a new zone, and the update-default-records
+    // script can be used to update the SOA and NS records.
     domains: [
         'elite12.de',
         'kirschbaum.me',
@@ -28,34 +37,39 @@ new RootDnsStack(app, 'RootDns', {
         'trigardon-rg.de',
         'westerwald-esport.de',
     ],
-    route53CMKarn: "arn:aws:kms:us-east-1:212836051001:key/e5898e64-5730-47d0-a471-728136cf6d09",
     env: {
         region: 'eu-central-1',
-        account: '212836051001'
+        account: dnsAccountID
     }
 })
-
-new CIStack(app, 'CIStack', {
-    env
-});
 
 new LogRedirectStack(app, 'LogRedirectStack', {
     domainName: 'logs.theramo.re',
     wclTokenSecretName: 'wcl-user-token',
     dnsDelegation: {
-        account: '212836051001',
+        account: dnsAccountID,
         roleName: 'LogsDnsDelegationRole',
-        hostedZoneId: 'Z00872631Z0SR25ON2GX1'
+        hostedZoneId: 'Z063409814X6LVK19O0XU'
     },
-    env
+    env: utilAccountEnv
 });
 
 new DomainPlaceholderStack(app, 'DomainPlaceholderStack', {
     domainName: 'kirschbaum.cloud',
     dnsDelegation: {
-        account: '212836051001',
+        account: dnsAccountID,
         roleName: 'DomainPlaceholderDnsDelegationRole',
-        hostedZoneId: 'Z07030592KWVVKAJQF666'
+        hostedZoneId: 'Z0202936UCVSS5ELQXV6'
     },
-    env
+    env: utilAccountEnv
 })
+
+new PrimeScoutStack(app, 'PrimeScoutStack', {
+    domainName: 'scout.westerwald-esport.de',
+    dnsDelegation: {
+        account: dnsAccountID,
+        roleName: 'PrimeScoutDnsDelegationRole',
+        hostedZoneId: 'Z061068430M8Q8F3V3ROJ'
+    },
+    env: utilAccountEnv
+});
