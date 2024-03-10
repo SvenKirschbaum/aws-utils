@@ -15,6 +15,8 @@ export const DEFAULT_TTL = Duration.hours(1);
 
 export const E12_SERVER_IPV4 = "89.58.11.239";
 export const E12_SERVER_IPV6 = "2a03:4000:5f:ba0::1";
+export const E12_MONITORING_IPV4 = "152.53.19.135";
+export const E12_MONITORING_IPV6 = "2a0a:4cc0:1:11b6::1";
 
 export interface CommonRecordProps {
     zone: IHostedZone,
@@ -39,6 +41,26 @@ export class E12ServerRecord extends Construct {
             ttl: DEFAULT_TTL,
             recordName: props.name,
             target: RecordTarget.fromIpAddresses(E12_SERVER_IPV6),
+        });
+    }
+}
+
+export class E12MonitoringRecord extends Construct {
+
+    constructor(scope: Construct, id: string, props: NameableCommonRecordProps) {
+        super(scope, id);
+
+        new ARecord(this, 'ARecord', {
+            zone: props.zone,
+            ttl: DEFAULT_TTL,
+            recordName: props.name,
+            target: RecordTarget.fromIpAddresses(E12_MONITORING_IPV4),
+        });
+        new AaaaRecord(this, 'AAAARecord', {
+            zone: props.zone,
+            ttl: DEFAULT_TTL,
+            recordName: props.name,
+            target: RecordTarget.fromIpAddresses(E12_MONITORING_IPV6),
         });
     }
 }

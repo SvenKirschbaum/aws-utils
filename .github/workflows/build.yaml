@@ -1,0 +1,109 @@
+name: build
+
+on:
+  pull_request:
+  workflow_call:
+
+jobs:
+  build-cicd-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/cicd.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cicd-app-cloud-assembly
+          path: cdk.out
+  build-dns-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/dns.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-app-cloud-assembly
+          path: cdk.out
+  build-domain-placeholder-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/domain-placeholder.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: domain-placeholder-app-cloud-assembly
+          path: cdk.out
+  build-log-redirect-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Install Lambda dependencies
+        working-directory: ./lambda/log-redirect
+        run: npm ci
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/log-redirect.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: log-redirect-app-cloud-assembly
+          path: cdk.out
+  build-prime-scout-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Install Lambda dependencies
+        working-directory: ./lambda/prime-scout
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: ./frontend/prime-scout
+        run: npm ci
+      - name: Build frontend
+        working-directory: ./frontend/prime-scout
+        run: npm run build
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/prime-scout.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prime-scout-app-cloud-assembly
+          path: cdk.out

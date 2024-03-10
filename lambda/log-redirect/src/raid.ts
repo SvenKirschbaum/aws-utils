@@ -4,11 +4,11 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
 import {getLatestRaidReport, REPORT_URL_PREFIX, reportsAge} from "./wcl";
-import {captureLambdaHandler, Tracer} from "@aws-lambda-powertools/tracer";
-import {injectLambdaContext} from "@aws-lambda-powertools/logger";
 import {logger, tracer} from "./util";
+import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
+import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
 
-const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
+const lambdaHandler = async function (_: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
     const reportId = await getLatestRaidReport();
 
     if(reportId) {

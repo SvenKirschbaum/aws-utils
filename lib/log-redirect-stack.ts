@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import {Duration, Fn} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {HttpLambdaIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {HttpApi} from "aws-cdk-lib/aws-apigatewayv2";
+import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
@@ -15,10 +15,10 @@ import {
   ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {HttpOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
-import {R53DelegationRoleInfo} from "./constructs/R53DelegationRole";
 import {Role} from "aws-cdk-lib/aws-iam";
-import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
+import {R53DelegationRoleInfo} from "./constructs/util";
+import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
 
 export interface LogRedirectStackProps extends cdk.StackProps {
   domainName: string,

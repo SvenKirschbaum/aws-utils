@@ -1,7 +1,7 @@
 //Cross invocation cache
 import {gql, GraphQLClient} from "graphql-request";
 import {GetSecretValueCommand, SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
-import jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import {tracer} from "./util";
 import {DateTime} from "luxon";
 

@@ -8,6 +8,7 @@ if response['IsTruncated']:
 
 zones = response['HostedZones']
 
+
 for zone in zones:
     client.change_resource_record_sets(
         HostedZoneId=zone['Id'],

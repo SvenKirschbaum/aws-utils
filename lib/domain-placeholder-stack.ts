@@ -1,4 +1,4 @@
-import {CfnOutput, Duration, Stack, StackProps} from "aws-cdk-lib";
+import {Duration, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {Bucket} from "aws-cdk-lib/aws-s3";
 import {BucketDeployment, Source} from "aws-cdk-lib/aws-s3-deployment";
@@ -10,11 +10,11 @@ import {
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
-import {CrossAccountRoute53RecordSet} from "cdk-cross-account-route53";
-import {R53DelegationRoleInfo} from "./constructs/R53DelegationRole";
 import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
 import {Role} from "aws-cdk-lib/aws-iam";
+import {R53DelegationRoleInfo} from "./constructs/util";
+import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
 
 export interface DomainPlaceholderStackProps extends StackProps {
     domainName: string,
@@ -29,7 +29,7 @@ export class DomainPlaceholderStack extends Stack {
 
         new BucketDeployment(this, 'BucketDeployment', {
             destinationBucket: bucket,
-            sources: [Source.asset('./domain-placeholder')]
+            sources: [Source.asset('./frontend/domain-placeholder')]
         });
 
         const certificate = new DnsValidatedCertificate(this, 'Certificate', {

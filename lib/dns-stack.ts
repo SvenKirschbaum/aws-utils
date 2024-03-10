@@ -1,35 +1,101 @@
-import {CfnOutput, CfnResource, Duration, Stack, StackProps} from "aws-cdk-lib";
+import {CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {
     AaaaRecord,
-    ARecord, CaaAmazonRecord, CaaRecord, CaaTag, CfnDNSSEC, CfnHostedZone, CfnKeySigningKey, IPublicHostedZone,
+    ARecord,
+    CaaAmazonRecord,
+    CaaRecord,
+    CaaTag,
+    CfnDNSSEC,
+    CfnKeySigningKey,
+    IPublicHostedZone,
     PublicHostedZone,
-    RecordTarget, RecordType, SrvRecord, TxtRecord, ZoneDelegationRecord,
+    RecordTarget,
+    RecordType,
+    SrvRecord,
+    TxtRecord,
 } from "aws-cdk-lib/aws-route53";
-import {R53DelegationRole, R53DelegationUser} from "./constructs/R53DelegationRole";
-import {AccountPrincipal} from "aws-cdk-lib/aws-iam";
+import {AccountPrincipal, Effect, PolicyStatement, ServicePrincipal} from "aws-cdk-lib/aws-iam";
 import {
     DEFAULT_TTL,
-    E12_SERVER_IPV4, E12_SERVER_IPV6,
+    E12_SERVER_IPV4,
+    E12_SERVER_IPV6,
+    E12MonitoringRecord,
     E12ServerRecord,
     GoogleMailRecords,
     LetsencryptCAARecord
 } from "./constructs/CommonRecords";
+import {CrossAccountRoute53Role, Route53User} from "@fallobst22/cdk-cross-account-route53";
+import {Key, KeySpec, KeyUsage} from "aws-cdk-lib/aws-kms";
 
 export interface RootDnsProps extends StackProps {
-    domains: string[],
-    route53CMKarn: string
+    domains: string[]
 }
 
-export class RootDnsStack extends Stack {
+class DnsStackUSEast1ResourcesStack extends Stack {
+    public cmk: Key;
+
+    constructor(scope: Construct, id: string, props: StackProps) {
+        super(scope, id, props);
+
+        this.cmk = new Key(this, 'Route53CMK', {
+            removalPolicy: RemovalPolicy.DESTROY,
+            keySpec: KeySpec.ECC_NIST_P256,
+            keyUsage: KeyUsage.SIGN_VERIFY,
+        });
+
+        this.cmk.addToResourcePolicy(new PolicyStatement({
+            effect: Effect.ALLOW,
+            principals: [
+                new ServicePrincipal('dnssec-route53.amazonaws.com')
+            ],
+            actions: [
+                "kms:DescribeKey",
+                "kms:GetPublicKey",
+                "kms:Sign"
+            ],
+            resources: ["*"]
+        }));
+
+        this.cmk.addToResourcePolicy(new PolicyStatement({
+            effect: Effect.ALLOW,
+            principals: [
+                new ServicePrincipal('dnssec-route53.amazonaws.com')
+            ],
+            actions: [
+                "kms:CreateGrant"
+            ],
+            resources: ["*"],
+            conditions: {
+                Bool: {
+                    "kms:GrantIsForAWSResource": true
+                }
+            }
+        }));
+    }
+}
+
+export class DNSStack extends Stack {
 
     constructor(scope: Construct, id: string, props: RootDnsProps) {
-        super(scope, id, props);
+        super(scope, id, {
+            ...props,
+            crossRegionReferences: true
+        });
+
+        const usEast1Resources = new DnsStackUSEast1ResourcesStack(this, 'USEast1Resources', {
+            ...props,
+            crossRegionReferences: true,
+            env: {
+                account: props.env?.account,
+                region: 'us-east-1'
+            }
+        });
 
         const hostedZones = Object.fromEntries(
             props.domains.map((domain) => [
                 domain,
-                this.createHostedZone(domain, props.route53CMKarn)
+                this.createHostedZone(domain, usEast1Resources.cmk)
             ])
         );
 
@@ -42,8 +108,9 @@ export class RootDnsStack extends Stack {
         this.createMarkusDopeRecords(hostedZones['markus-dope.de']);
         this.createGrillteller42DeRecords(hostedZones['grillteller42.de']);
         this.createTrigardonRgDeRecords(hostedZones['trigardon-rg.de']);
+        this.createWesterwaldEsportDeRecords(hostedZones['westerwald-esport.de']);
 
-        new R53DelegationRole(this, 'DomainPlaceholderDnsDelegation', {
+        new CrossAccountRoute53Role(this, 'DomainPlaceholderDnsDelegation', {
             zone: hostedZones['kirschbaum.cloud'],
             assumedBy: new AccountPrincipal('362408963076'),
             roleName: 'DomainPlaceholderDnsDelegationRole',
@@ -59,7 +126,7 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationRole(this, 'LogsDnsDelegation', {
+        new CrossAccountRoute53Role(this, 'LogsDnsDelegation', {
             zone: hostedZones['theramo.re'],
             assumedBy: new AccountPrincipal('362408963076'),
             roleName: 'LogsDnsDelegationRole',
@@ -75,7 +142,47 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationUser(this, 'extGWDelegation', {
+        new CrossAccountRoute53Role(this, 'PrimeScoutDnsDelegation', {
+            zone: hostedZones['westerwald-esport.de'],
+            assumedBy: new AccountPrincipal('362408963076'),
+            roleName: 'PrimeScoutDnsDelegationRole',
+            records: [
+                {
+                    types: [RecordType.A, RecordType.AAAA],
+                    domains: ['scout.westerwald-esport.de', '*.scout.westerwald-esport.de']
+                },
+                {
+                    types: [RecordType.CNAME],
+                    domains: ['*.scout.westerwald-esport.de']
+                }
+            ]
+        });
+
+        new CrossAccountRoute53Role(this, 'CloudshareStagingDNSDelegation', {
+            zone: hostedZones['kirschbaum.cloud'],
+            assumedBy: new AccountPrincipal('276098254089'),
+            roleName: 'CloudshareStagingDnsDelegationRole',
+            records: [
+                {
+                    types: [RecordType.A, RecordType.AAAA, RecordType.NS, RecordType.CNAME, RecordType.TXT],
+                    domains: ['share-staging.kirschbaum.cloud', '*.share-staging.kirschbaum.cloud']
+                }
+            ]
+        });
+
+        new CrossAccountRoute53Role(this, 'CloudshareProdDNSDelegation', {
+            zone: hostedZones['kirschbaum.cloud'],
+            assumedBy: new AccountPrincipal('743848950232'),
+            roleName: 'CloudshareProdDnsDelegationRole',
+            records: [
+                {
+                    types: [RecordType.A, RecordType.AAAA, RecordType.NS, RecordType.CNAME, RecordType.TXT],
+                    domains: ['share.kirschbaum.cloud', '*.share.kirschbaum.cloud']
+                }
+            ]
+        });
+
+        new Route53User(this, 'extGWDelegation', {
             zone: hostedZones['kirschbaum.me'],
             secretName: 'extGw-Accesskey',
             records: [
@@ -86,7 +193,7 @@ export class RootDnsStack extends Stack {
             ]
         });
 
-        new R53DelegationUser(this, 'homeDelegation', {
+        new Route53User(this, 'homeDelegation', {
             zone: hostedZones['kirschbaum.me'],
             secretName: 'home-Accesskey',
             records: [
@@ -98,18 +205,19 @@ export class RootDnsStack extends Stack {
         });
     }
 
-    private createHostedZone(domain: string, cmkArn: string) {
+    private createHostedZone(domain: string, cmk: Key) {
         const hostedZone = new PublicHostedZone(this, domain, {
             zoneName: domain,
         });
 
         const ksk = new CfnKeySigningKey(this, `${domain}-ksk`, {
             hostedZoneId: hostedZone.hostedZoneId,
-            keyManagementServiceArn: cmkArn,
+            keyManagementServiceArn: cmk.keyArn,
             name: 'ksk01',
             status: 'ACTIVE',
         });
         ksk.addDependency(hostedZone.node.defaultChild as CfnResource);
+        ksk.addDependency(cmk.node.defaultChild as CfnResource);
 
         const dnssec = new CfnDNSSEC(this, `${domain}-dnssec`, {
             hostedZoneId: hostedZone.hostedZoneId
@@ -124,52 +232,52 @@ export class RootDnsStack extends Stack {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns1',
-            target: RecordTarget.fromIpAddresses('205.251.198.244')
+            target: RecordTarget.fromIpAddresses('205.251.197.240')
         });
         new AaaaRecord(zone, 'Ns1AAAARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns1',
-            target: RecordTarget.fromIpAddresses('2600:9000:5306:f400::1')
+            target: RecordTarget.fromIpAddresses('2600:9000:5305:f000::1')
         });
 
         new ARecord(zone, 'Ns2ARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns2',
-            target: RecordTarget.fromIpAddresses('205.251.192.163')
+            target: RecordTarget.fromIpAddresses('205.251.193.155')
         });
         new AaaaRecord(zone, 'Ns2AAAARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns2',
-            target: RecordTarget.fromIpAddresses('2600:9000:5300:a300::1')
+            target: RecordTarget.fromIpAddresses('2600:9000:5301:9b00::1')
         });
 
         new ARecord(zone, 'Ns3ARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns3',
-            target: RecordTarget.fromIpAddresses('205.251.195.25')
+            target: RecordTarget.fromIpAddresses('205.251.194.127')
         });
         new AaaaRecord(zone, 'Ns3AAAARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns3',
-            target: RecordTarget.fromIpAddresses('2600:9000:5303:1900::1')
+            target: RecordTarget.fromIpAddresses('2600:9000:5302:7f00::1')
         });
 
         new ARecord(zone, 'Ns4ARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns4',
-            target: RecordTarget.fromIpAddresses('205.251.197.99')
+            target: RecordTarget.fromIpAddresses('205.251.199.225')
         });
         new AaaaRecord(zone, 'Ns4AAAARecord', {
             zone,
             ttl: Duration.days(2),
             recordName: 'ns4',
-            target: RecordTarget.fromIpAddresses('2600:9000:5305:6300::1')
+            target: RecordTarget.fromIpAddresses('2600:9000:5307:e100::1')
         });
     }
 
@@ -180,6 +288,14 @@ export class RootDnsStack extends Stack {
         new E12ServerRecord(zone, 'E12Wild', {
             zone,
             name: '*'
+        });
+        new E12MonitoringRecord(zone, 'E12MonitoringRoot', {
+            zone,
+            name: 'monitoring'
+        });
+        new E12MonitoringRecord(zone, 'E12MonitoringWild', {
+            zone,
+            name: '*.monitoring'
         });
         new ARecord(zone, 'Ipv4Record', {
             zone,
@@ -411,6 +527,47 @@ export class RootDnsStack extends Stack {
                     weight: 2,
                     priority: 1,
                     hostName: 'server.elite12.de'
+                }
+            ]
+        });
+    }
+
+    private createWesterwaldEsportDeRecords(zone: PublicHostedZone) {
+        new E12ServerRecord(zone, 'E12Root', {
+            zone
+        });
+        new E12ServerRecord(zone, 'E12Wild', {
+            zone,
+            name: '*'
+        });
+        new CaaRecord(this, 'CAA-Custom', {
+            zone: zone,
+            ttl: DEFAULT_TTL,
+            values: [
+                {
+                    tag: CaaTag.IODEF,
+                    flag: 0,
+                    value: 'mailto:caa@kirschbaum.me'
+                },
+                {
+                    tag: CaaTag.ISSUE,
+                    flag: 0,
+                    value: 'letsencrypt.org'
+                },
+                {
+                    tag: CaaTag.ISSUEWILD,
+                    flag: 0,
+                    value: 'letsencrypt.org'
+                },
+                {
+                    tag: CaaTag.ISSUE,
+                    flag: 0,
+                    value: 'amazonaws.com'
+                },
+                {
+                    tag: CaaTag.ISSUEWILD,
+                    flag: 0,
+                    value: 'amazonaws.com'
                 }
             ]
         });

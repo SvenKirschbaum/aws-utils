@@ -2,22 +2,22 @@
   "name": "util-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "1.12.1",
-    "@aws-lambda-powertools/tracer": "1.12.1",
-    "@middy/core": "4.6.0",
-    "@middy/http-header-normalizer": "4.6.0",
-    "@middy/http-error-handler": "4.6.0",
-    "@middy/http-response-serializer": "4.6.0",
-    "@middy/error-logger": "4.6.0",
-    "@aws-sdk/client-secrets-manager": "3.389.0",
+    "@aws-lambda-powertools/logger": "2.0.2",
+    "@aws-lambda-powertools/tracer": "2.0.2",
+    "@middy/core": "5.2.6",
+    "@middy/http-header-normalizer": "5.2.6",
+    "@middy/http-error-handler": "5.2.6",
+    "@middy/http-response-serializer": "5.2.6",
+    "@middy/error-logger": "5.2.6",
+    "@aws-sdk/client-secrets-manager": "3.529.1",
     "graphql-request": "6.1.0",
-    "jwt-decode": "3.1.2",
-    "luxon": "3.4.0"
+    "jwt-decode": "4.0.0",
+    "luxon": "3.4.4"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.119",
-    "@types/http-errors": "2.0.1",
-    "@types/luxon": "3.3.1",
-    "typescript": "5.1.6"
+    "@types/aws-lambda": "8.10.136",
+    "@types/http-errors": "2.0.4",
+    "@types/luxon": "3.4.2",
+    "typescript": "5.4.2"
   }
 }
