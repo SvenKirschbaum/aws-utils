@@ -111,7 +111,10 @@ const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<AP
         }
     } else {
         return {
-            statusCode: 400
+            statusCode: 400,
+            body: {
+                error: "URL format is unknown. Please provide a PrimeLeague.gg Team or Match URL."
+            } as any
         }
     }
 

@@ -11,9 +11,8 @@ import {
     CardContent, CircularProgress,
     Container,
     createTheme,
-    CssBaseline, Stack, TextField,
+    CssBaseline, TextField,
     ThemeProvider,
-    Typography,
     useMediaQuery
 } from "@mui/material";
 import React, {useState} from "react";
@@ -44,9 +43,13 @@ function App() {
 }
 
 function ScoutComponent() {
+    const [loading, setLoading] = useState(false);
     const [url, setUrl] = useState("");
+    const [error, setError] = useState(undefined);
 
     const onSubmit = () => {
+        setError(undefined);
+        setLoading(true);
         fetch(apiURL, {
             method: 'POST',
             body: JSON.stringify({url}),
@@ -54,23 +57,47 @@ function ScoutComponent() {
                 'Content-Type': 'application/json'
             }
         })
-        .then(res => res.json())
+        .then(async res => {
+            if (!res.ok) {
+                if(res.headers.get('Content-Type') === 'application/json' && parseInt(res.headers.get('Content-Length')) > 0) {
+                    const body = await res.json();
+                    throw new Error(body.error);
+                }
+                throw new Error(res.statusText || 'An error occurred while processing your request');
+            }
+            return res.json();
+        })
         .then(data => {
             window.location = data.searchURL;
         })
         .catch(err => {
-            console.error(err);
+            setError(err.message);
+            setLoading(false);
         });
     };
 
     return (
         <Card>
-            <CardContent sx={{p: 1}}>
-                <TextField sx={{width: '100%'}} label="Team or Match Link" variant="filled" required helperText="Input a Prime League Team or Match Link" value={url} onChange={(e) => setUrl(e.target.value)} />
-            </CardContent>
-            <CardActions sx={{float: 'right'}}>
-                <Button variant="contained" onClick={onSubmit}>Submit</Button>
-            </CardActions>
+            {loading ? <CardContent sx={{textAlign: 'center', p: 4}}><CircularProgress/></CardContent> :
+                <>
+                    <CardContent sx={{p: 1}}>
+                        <TextField
+                            sx={{width: '100%'}}
+                            label="Team or Match Link"
+                            variant="filled"
+                            required
+                            helperText={error ?? "Input a Prime League Team or Match Link"}
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            error={error !== undefined}
+                            onKeyDown={(e) => {e.key === 'Enter' && onSubmit()}}
+                        />
+                    </CardContent>
+                    <CardActions sx={{float: 'right'}}>
+                        <Button variant="contained" onClick={onSubmit}>Submit</Button>
+                    </CardActions>
+                </>
+            }
         </Card>
     );
 }
