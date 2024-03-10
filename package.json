@@ -21,7 +21,7 @@
     "typescript": "~5.4.0"
   },
   "dependencies": {
-    "@fallobst22/cdk-cross-account-route53": "^0.0.6",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.7",
     "@trautonen/cdk-dns-validated-certificate": "0.0.46",
     "aws-cdk-lib": "2.132.0",
     "constructs": "10.3.0",
