@@ -13,8 +13,18 @@ import {Duration} from "aws-cdk-lib";
 
 export const DEFAULT_TTL = Duration.hours(1);
 
-export const E12_SERVER_IPV4 = "89.58.11.239";
-export const E12_SERVER_IPV6 = "2a03:4000:5f:ba0::1";
+/**
+ * @Deprecated
+ */
+export const E12_OLD_SERVER_IPV4 = "89.58.11.239";
+/**
+ * @Deprecated
+ */
+export const E12_OLD_SERVER_IPV6 = "2a03:4000:5f:ba0::1";
+
+export const MAIN_01_NUE_NC_IPV4 = "89.58.34.152";
+
+export const MAIN_01_NUE_NC_IPV6 = "2a03:4000:64:95::1";
 export const E12_MONITORING_IPV4 = "152.53.19.135";
 export const E12_MONITORING_IPV6 = "2a0a:4cc0:1:11b6::1";
 
@@ -25,7 +35,7 @@ export interface CommonRecordProps {
 export interface NameableCommonRecordProps extends CommonRecordProps {
     name?: string
 }
-export class E12ServerRecord extends Construct {
+export class E12MainRecord extends Construct {
 
     constructor(scope: Construct, id: string, props: NameableCommonRecordProps) {
         super(scope, id);
@@ -34,13 +44,13 @@ export class E12ServerRecord extends Construct {
             zone: props.zone,
             ttl: DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_SERVER_IPV4),
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV4),
         });
         new AaaaRecord(this, 'AAAARecord', {
             zone: props.zone,
             ttl: DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_SERVER_IPV6),
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV6),
         });
     }
 }
@@ -147,7 +157,7 @@ export class GoogleMailRecords extends Construct {
             zone: props.zone,
             ttl: DEFAULT_TTL,
             values: [
-                `v=spf1 include:_spf.google.com ip4:${E12_SERVER_IPV4}/32 ip6:${E12_SERVER_IPV6}/64 ~all`
+                `v=spf1 include:_spf.google.com ~all`
             ]
         });
 

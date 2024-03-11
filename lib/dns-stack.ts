@@ -18,12 +18,12 @@ import {
 import {AccountPrincipal, Effect, PolicyStatement, ServicePrincipal} from "aws-cdk-lib/aws-iam";
 import {
     DEFAULT_TTL,
-    E12_SERVER_IPV4,
-    E12_SERVER_IPV6,
+    E12_OLD_SERVER_IPV4,
+    E12_OLD_SERVER_IPV6,
     E12MonitoringRecord,
-    E12ServerRecord,
+    E12MainRecord,
     GoogleMailRecords,
-    LetsencryptCAARecord
+    LetsencryptCAARecord, MAIN_01_NUE_NC_IPV4, MAIN_01_NUE_NC_IPV6
 } from "./constructs/CommonRecords";
 import {CrossAccountRoute53Role, Route53User} from "@fallobst22/cdk-cross-account-route53";
 import {Key, KeySpec, KeyUsage} from "aws-cdk-lib/aws-kms";
@@ -100,6 +100,7 @@ export class DNSStack extends Stack {
         );
 
         this.createNameserverRecords(hostedZones['elite12.de']);
+        this.createHostnameRecords(hostedZones['elite12.de']);
         this.createElite12Records(hostedZones['elite12.de']);
         this.createKirschbaumMeRecords(hostedZones['kirschbaum.me']);
         this.createKirschbaumCloudRecords(hostedZones['kirschbaum.cloud']);
@@ -207,7 +208,7 @@ export class DNSStack extends Stack {
         Aspects.of(this).add({
             visit(node: IConstruct): void {
                 if (node instanceof CfnRecordSet) {
-                    if(node.resourceRecords?.includes(E12_SERVER_IPV4) || node.resourceRecords?.includes(E12_SERVER_IPV6)){
+                    if(node.resourceRecords?.includes(E12_OLD_SERVER_IPV4) || node.resourceRecords?.includes(E12_OLD_SERVER_IPV6) || node.resourceRecords?.some((v) => v.includes('server.elite12.de'))) {
                         node.ttl = '60';
                     }
                 }
@@ -291,11 +292,38 @@ export class DNSStack extends Stack {
         });
     }
 
+    private createHostnameRecords(zone: IPublicHostedZone) {
+        new ARecord(zone, 'ServerHostnameARecord', {
+            zone,
+            ttl: Duration.days(2),
+            recordName: 'server',
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV4)
+        });
+        new AaaaRecord(zone, 'ServerHostnameAAAARecord', {
+            zone,
+            ttl: Duration.days(2),
+            recordName: 'server',
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV6)
+        });
+        new ARecord(zone, 'Main01NueNcARecord', {
+            zone,
+            ttl: Duration.days(2),
+            recordName: 'main-01-nue-nc',
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV4)
+        });
+        new AaaaRecord(zone, 'Main01NueNcAAAARecord', {
+            zone,
+            ttl: Duration.days(2),
+            recordName: 'main-01-nue-nc',
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV6)
+        });
+    }
+
     private createElite12Records(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -311,13 +339,13 @@ export class DNSStack extends Stack {
             zone,
             ttl: DEFAULT_TTL,
             recordName: 'ipv4',
-            target: RecordTarget.fromIpAddresses(E12_SERVER_IPV4),
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV4),
         });
         new AaaaRecord(zone, 'Ipv6Record', {
             zone,
             ttl: DEFAULT_TTL,
             recordName: 'ipv6',
-            target: RecordTarget.fromIpAddresses(E12_SERVER_IPV6),
+            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV6),
         });
         new LetsencryptCAARecord(zone, 'CAA', {
             zone
@@ -360,10 +388,10 @@ export class DNSStack extends Stack {
         });
     }
     private createKirschbaumMeRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -392,10 +420,10 @@ export class DNSStack extends Stack {
 
     }
     private createBundvonTeramoreDeRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -424,10 +452,10 @@ export class DNSStack extends Stack {
         });
     }
     private createTheramoReRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -479,10 +507,10 @@ export class DNSStack extends Stack {
         });
     }
     private createMarkusDopeRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -498,10 +526,10 @@ export class DNSStack extends Stack {
         });
     }
     private createGrillteller42DeRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -510,10 +538,10 @@ export class DNSStack extends Stack {
         });
     }
     private createTrigardonRgDeRecords(zone: IPublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
@@ -543,10 +571,10 @@ export class DNSStack extends Stack {
     }
 
     private createWesterwaldEsportDeRecords(zone: PublicHostedZone) {
-        new E12ServerRecord(zone, 'E12Root', {
+        new E12MainRecord(zone, 'E12Root', {
             zone
         });
-        new E12ServerRecord(zone, 'E12Wild', {
+        new E12MainRecord(zone, 'E12Wild', {
             zone,
             name: '*'
         });
