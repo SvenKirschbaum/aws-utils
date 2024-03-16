@@ -9,86 +9,58 @@ import {
     RecordTarget,
     TxtRecord
 } from "aws-cdk-lib/aws-route53";
+import {
+    DEFAULT_TTL, HOSTS, LONG_TTL,
+} from "./constants";
 import {Duration} from "aws-cdk-lib";
-
-export const DEFAULT_TTL = Duration.hours(1);
-
-/**
- * @Deprecated
- */
-export const E12_OLD_SERVER_IPV4 = "89.58.11.239";
-/**
- * @Deprecated
- */
-export const E12_OLD_SERVER_IPV6 = "2a03:4000:5f:ba0::1";
-
-export const MAIN_01_NUE_NC_IPV4 = "89.58.34.152";
-
-export const MAIN_01_NUE_NC_IPV6 = "2a03:4000:64:95::1";
-export const E12_MONITORING_IPV4 = "152.53.19.135";
-export const E12_MONITORING_IPV6 = "2a0a:4cc0:1:11b6::1";
 
 export interface CommonRecordProps {
     zone: IHostedZone,
+    ttl?: Duration
 }
 
 export interface NameableCommonRecordProps extends CommonRecordProps {
     name?: string
 }
-export class E12MainRecord extends Construct {
 
-    constructor(scope: Construct, id: string, props: NameableCommonRecordProps) {
+export interface HostRecordProps extends NameableCommonRecordProps {
+    host: string
+}
+
+export class HostRecord extends Construct {
+
+    constructor(scope: Construct, id: string, props: HostRecordProps) {
         super(scope, id);
 
         new ARecord(this, 'ARecord', {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV4),
+            target: RecordTarget.fromIpAddresses(HOSTS[props.host].V4),
         });
         new AaaaRecord(this, 'AAAARecord', {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV6),
+            target: RecordTarget.fromIpAddresses(HOSTS[props.host].V6),
         });
     }
 }
 
-export class E12MonitoringRecord extends Construct {
-
-    constructor(scope: Construct, id: string, props: NameableCommonRecordProps) {
-        super(scope, id);
-
-        new ARecord(this, 'ARecord', {
-            zone: props.zone,
-            ttl: DEFAULT_TTL,
-            recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_MONITORING_IPV4),
-        });
-        new AaaaRecord(this, 'AAAARecord', {
-            zone: props.zone,
-            ttl: DEFAULT_TTL,
-            recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_MONITORING_IPV6),
-        });
-    }
-}
-
-export class LetsencryptCAARecord extends Construct {
+export class DefaultCAARecord extends Construct {
 
     constructor(scope: Construct, id: string, props: NameableCommonRecordProps) {
         super(scope, id);
 
         new CaaRecord(this, 'CAA', {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? LONG_TTL,
             recordName: props.name,
             values: [
                 {
                     tag: CaaTag.IODEF,
                     flag: 0,
-                    value: 'mailto:caa@kirschbaum.me'
+                    value: 'mailto:caa@elite12.de'
                 },
                 {
                     tag: CaaTag.ISSUE,
@@ -99,6 +71,16 @@ export class LetsencryptCAARecord extends Construct {
                     tag: CaaTag.ISSUEWILD,
                     flag: 0,
                     value: 'letsencrypt.org'
+                },
+                {
+                    tag: CaaTag.ISSUE,
+                    flag: 0,
+                    value: 'amazonaws.com'
+                },
+                {
+                    tag: CaaTag.ISSUEWILD,
+                    flag: 0,
+                    value: 'amazonaws.com'
                 }
             ]
         });
@@ -115,7 +97,7 @@ export class GoogleMailRecords extends Construct {
 
         new MxRecord(this, 'MXRecord', {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? DEFAULT_TTL,
             values: [
                 {
                     priority: 1,
@@ -144,7 +126,7 @@ export class GoogleMailRecords extends Construct {
             for (let domainKeyName in props.domainKeys) {
                 new TxtRecord(this, `DomainKey-${domainKeyName}`, {
                     zone: props.zone,
-                    ttl: DEFAULT_TTL,
+                    ttl: props.ttl ?? DEFAULT_TTL,
                     recordName: `${domainKeyName}._domainkey`,
                     values: [
                         props.domainKeys[domainKeyName]
@@ -155,7 +137,7 @@ export class GoogleMailRecords extends Construct {
 
         new TxtRecord(this, `SPFRecord`, {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? DEFAULT_TTL,
             values: [
                 `v=spf1 include:_spf.google.com ~all`
             ]
@@ -163,11 +145,44 @@ export class GoogleMailRecords extends Construct {
 
         new TxtRecord(this, `DMARCRecord`, {
             zone: props.zone,
-            ttl: DEFAULT_TTL,
+            ttl: props.ttl ?? DEFAULT_TTL,
             recordName: '_dmarc',
             values: [
                 'v=DMARC1; p=reject; adkim=s; aspf=s; rua=mailto:mailauth-reports-rua@elite12.de'
             ]
         });
+    }
+}
+
+interface DefaultDomainRecordsProps extends CommonRecordProps, GoogleMailRecordProps {
+
+}
+
+export class DefaultDomainRecords extends Construct {
+
+    constructor(scope: Construct, id: string, props: DefaultDomainRecordsProps) {
+        super(scope, id);
+
+        new HostRecord(this, 'Root', {
+            zone: props.zone,
+            host: 'main-01-nue-nc'
+        });
+
+        new HostRecord(this, 'Wildcard', {
+            zone: props.zone,
+            host: 'main-01-nue-nc',
+            name: '*'
+        });
+
+        new DefaultCAARecord(this, 'CAA', {
+            zone: props.zone
+        });
+
+        if(props.domainKeys) {
+            new GoogleMailRecords(this, 'Mail', {
+                zone: props.zone,
+                domainKeys: props.domainKeys
+            });
+        }
     }
 }
