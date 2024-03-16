@@ -1,5 +1,5 @@
-import {Aspects, CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
-import {Construct, IConstruct} from "constructs";
+import {CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
+import {Construct} from "constructs";
 import {
     AaaaRecord,
     ARecord,
@@ -7,7 +7,7 @@ import {
     CaaRecord,
     CaaTag,
     CfnDNSSEC,
-    CfnKeySigningKey, CfnRecordSet,
+    CfnKeySigningKey,
     IPublicHostedZone,
     PublicHostedZone,
     RecordTarget,
@@ -203,16 +203,6 @@ export class DNSStack extends Stack {
                     domains: ['_acme-challenge.home.kirschbaum.me','_acme-challenge.*.home.kirschbaum.me']
                 }
             ]
-        });
-
-        Aspects.of(this).add({
-            visit(node: IConstruct): void {
-                if (node instanceof CfnRecordSet) {
-                    if(node.resourceRecords?.includes(E12_OLD_SERVER_IPV4) || node.resourceRecords?.includes(E12_OLD_SERVER_IPV6) || node.resourceRecords?.some((v) => v.includes('server.elite12.de')) || node.resourceRecords?.some((v) => v.includes('main-01-nue-nc.elite12.de')) || node.resourceRecords?.includes(MAIN_01_NUE_NC_IPV4) || node.resourceRecords?.includes(MAIN_01_NUE_NC_IPV6)) {
-                        node.ttl = '60';
-                    }
-                }
-            }
         });
     }
 
