@@ -44,13 +44,13 @@ export class E12MainRecord extends Construct {
             zone: props.zone,
             ttl: DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV4),
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV4),
         });
         new AaaaRecord(this, 'AAAARecord', {
             zone: props.zone,
             ttl: DEFAULT_TTL,
             recordName: props.name,
-            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV6),
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV6),
         });
     }
 }

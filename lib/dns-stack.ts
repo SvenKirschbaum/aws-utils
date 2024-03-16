@@ -208,7 +208,7 @@ export class DNSStack extends Stack {
         Aspects.of(this).add({
             visit(node: IConstruct): void {
                 if (node instanceof CfnRecordSet) {
-                    if(node.resourceRecords?.includes(E12_OLD_SERVER_IPV4) || node.resourceRecords?.includes(E12_OLD_SERVER_IPV6) || node.resourceRecords?.some((v) => v.includes('server.elite12.de'))) {
+                    if(node.resourceRecords?.includes(E12_OLD_SERVER_IPV4) || node.resourceRecords?.includes(E12_OLD_SERVER_IPV6) || node.resourceRecords?.some((v) => v.includes('server.elite12.de')) || node.resourceRecords?.some((v) => v.includes('main-01-nue-nc.elite12.de')) || node.resourceRecords?.includes(MAIN_01_NUE_NC_IPV4) || node.resourceRecords?.includes(MAIN_01_NUE_NC_IPV6)) {
                         node.ttl = '60';
                     }
                 }
@@ -339,13 +339,13 @@ export class DNSStack extends Stack {
             zone,
             ttl: DEFAULT_TTL,
             recordName: 'ipv4',
-            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV4),
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV4),
         });
         new AaaaRecord(zone, 'Ipv6Record', {
             zone,
             ttl: DEFAULT_TTL,
             recordName: 'ipv6',
-            target: RecordTarget.fromIpAddresses(E12_OLD_SERVER_IPV6),
+            target: RecordTarget.fromIpAddresses(MAIN_01_NUE_NC_IPV6),
         });
         new LetsencryptCAARecord(zone, 'CAA', {
             zone
@@ -446,7 +446,7 @@ export class DNSStack extends Stack {
                     port: 5732,
                     weight: 2,
                     priority: 1,
-                    hostName: 'server.elite12.de'
+                    hostName: 'main-01-nue-nc.elite12.de'
                 }
             ]
         });
@@ -501,7 +501,7 @@ export class DNSStack extends Stack {
                     port: 5732,
                     weight: 2,
                     priority: 1,
-                    hostName: 'server.elite12.de'
+                    hostName: 'main-01-nue-nc.elite12.de'
                 }
             ]
         });
@@ -564,7 +564,7 @@ export class DNSStack extends Stack {
                     port: 3955,
                     weight: 2,
                     priority: 1,
-                    hostName: 'server.elite12.de'
+                    hostName: 'main-01-nue-nc.elite12.de'
                 }
             ]
         });
