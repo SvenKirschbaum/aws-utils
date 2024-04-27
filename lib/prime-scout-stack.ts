@@ -47,11 +47,13 @@ export class PrimeScoutStack extends cdk.Stack {
 
     private createApi() {
         const certificate = new DnsValidatedCertificate(this, 'ApiCertificate', {
-            hostedZone: this.hostedZone,
+            validationHostedZones: [{
+                hostedZone: this.hostedZone,
+                validationRole: Role.fromRoleArn(this, 'ApiCertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
+                    mutable: false
+                })
+            }],
             domainName: `api.${this.props.domainName}`,
-            validationRole: Role.fromRoleArn(this, 'ApiCertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
-                mutable: false
-            }),
             certificateRegion: 'us-east-1'
         })
 
@@ -171,11 +173,13 @@ export class PrimeScoutStack extends cdk.Stack {
         });
 
         const certificate = new DnsValidatedCertificate(this, 'FrontendCertificate', {
-            hostedZone: this.hostedZone,
+            validationHostedZones: [{
+                hostedZone: this.hostedZone,
+                validationRole: Role.fromRoleArn(this, 'FrontendCertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
+                    mutable: false
+                })
+            }],
             domainName: this.props.domainName,
-            validationRole: Role.fromRoleArn(this, 'FrontendCertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
-                mutable: false
-            }),
             certificateRegion: 'us-east-1'
         })
 
