@@ -43,16 +43,18 @@ export class LogRedirectStack extends cdk.Stack {
   private createApi() {
 
     const certificate = new DnsValidatedCertificate(this, 'Certificate', {
-      hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-        hostedZoneId: this.props.dnsDelegation.hostedZoneId,
-        zoneName: this.props.domainName
-      }),
+      validationHostedZones: [{
+        hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+          hostedZoneId: this.props.dnsDelegation.hostedZoneId,
+          zoneName: this.props.domainName
+        }),
+        validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
+          mutable: false
+        })
+      }],
       domainName: this.props.domainName,
-      validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
-        mutable: false
-      }),
       certificateRegion: 'us-east-1'
-    })
+    });
 
     this.httpApi = new HttpApi(this, 'HttpApi');
 

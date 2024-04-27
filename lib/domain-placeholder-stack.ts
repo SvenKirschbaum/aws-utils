@@ -33,14 +33,16 @@ export class DomainPlaceholderStack extends Stack {
         });
 
         const certificate = new DnsValidatedCertificate(this, 'Certificate', {
-            hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-                hostedZoneId: props.dnsDelegation.hostedZoneId,
-                zoneName: props.domainName
-            }),
+            validationHostedZones: [{
+                hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+                    hostedZoneId: props.dnsDelegation.hostedZoneId,
+                    zoneName: props.domainName
+                }),
+                validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + props.dnsDelegation.account + ':role/' + props.dnsDelegation.roleName, {
+                    mutable: false
+                })
+            }],
             domainName: props.domainName,
-            validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + props.dnsDelegation.account + ':role/' + props.dnsDelegation.roleName, {
-                mutable: false
-            }),
             certificateRegion: 'us-east-1'
         })
 
