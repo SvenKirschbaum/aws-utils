@@ -6,7 +6,8 @@ const app = new cdk.App();
 
 new LogRedirectStack(app, 'LogRedirectStack', {
     domainName: 'logs.theramo.re',
-    wclTokenSecretName: 'wcl-user-token',
+    clientId: '992544c0-1315-4185-839e-db011e45ff31',
+    wclTokenSecretName: 'wcl-auth',
     dnsDelegation: {
         account: dnsAccountID,
         roleName: 'LogsDnsDelegationRole',

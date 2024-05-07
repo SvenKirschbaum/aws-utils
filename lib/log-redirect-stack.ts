@@ -12,7 +12,8 @@ import {
   CachePolicy,
   Distribution,
   HttpVersion,
-  ViewerProtocolPolicy
+  ViewerProtocolPolicy,
+  OriginRequestPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {HttpOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {Role} from "aws-cdk-lib/aws-iam";
@@ -22,6 +23,7 @@ import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route5
 
 export interface LogRedirectStackProps extends cdk.StackProps {
   domainName: string,
+  clientId: string,
   wclTokenSecretName: string,
   dnsDelegation: R53DelegationRoleInfo
 }
@@ -65,6 +67,14 @@ export class LogRedirectStack extends cdk.Stack {
         origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+      },
+      additionalBehaviors: {
+        '/auth': {
+          origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        }
       },
       httpVersion: HttpVersion.HTTP2_AND_3,
     });
@@ -135,6 +145,26 @@ export class LogRedirectStack extends cdk.Stack {
     this.httpApi.addRoutes({
       path: '/mythplus',
       integration:  new HttpLambdaIntegration('MythIntegration', mythFunction),
+    })
+
+    const authFunction = new NodejsFunction(this, 'AuthFunction', {
+      entry: 'lambda/log-redirect/src/auth.ts',
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      logRetention: RetentionDays.THREE_DAYS,
+      timeout: Duration.seconds(10),
+      tracing: Tracing.ACTIVE,
+      environment: {
+        'OAUTH_CLIENT_ID': this.props.clientId,
+        'OAUTH_SECRET_ARN': secret.secretArn
+      }
+    });
+    secret.grantRead(authFunction);
+    secret.grantWrite(authFunction);
+
+    this.httpApi.addRoutes({
+      path: '/auth',
+      integration:  new HttpLambdaIntegration('AuthIntegration', authFunction),
     })
 
   }

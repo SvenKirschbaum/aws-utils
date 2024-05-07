@@ -1,9 +1,8 @@
 //Cross invocation cache
 import {gql, GraphQLClient} from "graphql-request";
-import {GetSecretValueCommand, SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import {jwtDecode} from "jwt-decode";
-import {tracer} from "./util";
 import {DateTime} from "luxon";
+import {getSecret} from "./secret";
 
 let reports: Report[];
 export let reportsAge: DateTime;
@@ -46,19 +45,17 @@ interface ReportList {
 export async function getReports() {
     if(reports && DateTime.now().diff(reportsAge).as('second') < 300) return reports;
 
-    const client = tracer.captureAWSv3Client(new SecretsManagerClient({region: process.env.AWS_REGION}));
-    const token = await client.send(new GetSecretValueCommand({
-        SecretId: process.env.OAUTH_SECRET_ARN
-    }));
+    const secret = await getSecret();
+    const token = secret.user_access_token;
 
-    if(!token.SecretString) throw new Error('Secret is empty');
+    if(!token) throw new Error('No User Access token available');
 
-    const parsedToken = jwtDecode(token.SecretString) as {sub: string};
+    const parsedToken = jwtDecode(token) as {sub: string};
     const userId = parseInt(parsedToken.sub);
 
     const gqlClient = new GraphQLClient(gqlEndpoint, {
         headers: {
-            authorization: `Bearer ${token.SecretString}`,
+            authorization: `Bearer ${token}`,
         }
     });
 
