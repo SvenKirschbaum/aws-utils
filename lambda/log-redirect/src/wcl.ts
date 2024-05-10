@@ -12,7 +12,7 @@ const gqlEndpoint = 'https://www.warcraftlogs.com/api/v2/user';
 const gqlQuery = gql`
     query getLatestLog($userId: Int!) {
         reportData {
-            reports(userID: $userId, limit: 10) {
+            reports(userID: $userId, limit: 25) {
                 data {
                     code
                     visibility

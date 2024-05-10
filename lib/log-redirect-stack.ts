@@ -89,6 +89,25 @@ export class LogRedirectStack extends cdk.Stack {
       integration:  new HttpLambdaIntegration('MythIntegration', mythFunction),
     })
 
+    const listFunction = new NodejsFunction(this, 'ListFunction', {
+      entry: 'lambda/log-redirect/src/list.ts',
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      logRetention: RetentionDays.THREE_DAYS,
+      timeout: Duration.seconds(10),
+      tracing: Tracing.ACTIVE,
+      memorySize: 1769,
+      environment: {
+        'OAUTH_SECRET_ARN': secret.secretArn
+      }
+    });
+    secret.grantRead(listFunction);
+
+    this.httpApi.addRoutes({
+      path: '/list',
+      integration:  new HttpLambdaIntegration('ListIntegration', listFunction),
+    })
+
     const authFunction = new NodejsFunction(this, 'AuthFunction', {
       entry: 'lambda/log-redirect/src/auth.ts',
       runtime: Runtime.NODEJS_18_X,
@@ -206,6 +225,7 @@ export class LogRedirectStack extends cdk.Stack {
       additionalBehaviors: {
         '/raid': apiBehavior,
         '/mythplus': apiBehavior,
+        '/list': apiBehavior,
         '/auth': {
           origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
