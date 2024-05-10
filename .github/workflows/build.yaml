@@ -113,3 +113,30 @@ jobs:
         with:
           name: prime-scout-app-cloud-assembly
           path: cdk.out
+  build-character-list-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Install Lambda dependencies
+        working-directory: ./lambda/character-list
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: ./frontend/character-list
+        run: npm ci
+      - name: Build frontend
+        working-directory: ./frontend/character-list
+        run: npm run build
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/character-list.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-list-app-cloud-assembly
+          path: cdk.out

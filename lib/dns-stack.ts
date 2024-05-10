@@ -259,6 +259,22 @@ export class DNSStack extends Stack {
             ]
         });
 
+        new CrossAccountRoute53Role(this, 'CharsDnsDelegation', {
+            zone: hostedZones['theramo.re'],
+            assumedBy: new AccountPrincipal('362408963076'),
+            roleName: 'CharsDnsDelegationRole',
+            records: [
+                {
+                    types: [RecordType.A, RecordType.AAAA],
+                    domains: ['chars.theramo.re']
+                },
+                {
+                    types: [RecordType.CNAME],
+                    domains: ['_*.chars.theramo.re']
+                }
+            ]
+        });
+
         new CrossAccountRoute53Role(this, 'PrimeScoutDnsDelegation', {
             zone: hostedZones['westerwald-esport.de'],
             assumedBy: new AccountPrincipal('362408963076'),

@@ -110,3 +110,22 @@ jobs:
           role-session-name: github-action-deploy-prime-scout-app
       - name: Deploy CDK stack
         run: npx cdk deploy --app cdk.out --require-approval=never "*"
+  character-list-app:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: character-list-app-cloud-assembly
+          path: cdk.out
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-action-deploy-character-list-app
+      - name: Deploy CDK stack
+        run: npx cdk deploy --app cdk.out --require-approval=never "*"
