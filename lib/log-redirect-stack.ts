@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import {Duration, Fn} from 'aws-cdk-lib';
+import {Duration, Fn, RemovalPolicy} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {HttpApi} from "aws-cdk-lib/aws-apigatewayv2";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -13,13 +13,15 @@ import {
   Distribution,
   HttpVersion,
   ViewerProtocolPolicy,
-  OriginRequestPolicy
+  OriginRequestPolicy, OriginAccessIdentity
 } from "aws-cdk-lib/aws-cloudfront";
-import {HttpOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
+import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {Role} from "aws-cdk-lib/aws-iam";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
 import {R53DelegationRoleInfo} from "./constructs/util";
 import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
+import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
+import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deployment";
 
 export interface LogRedirectStackProps extends cdk.StackProps {
   domainName: string,
@@ -32,6 +34,7 @@ export class LogRedirectStack extends cdk.Stack {
 
   private props: LogRedirectStackProps;
   private httpApi: HttpApi;
+  private frontendOrigin: S3Origin;
 
   constructor(scope: Construct, id: string, props: LogRedirectStackProps) {
     super(scope, id, props);
@@ -39,74 +42,13 @@ export class LogRedirectStack extends cdk.Stack {
     this.props = props;
 
     this.createApi();
-    this.createApiRoutes();
+    this.createFrontend();
+    this.createDistribution();
   }
 
   private createApi() {
-
-    const certificate = new DnsValidatedCertificate(this, 'Certificate', {
-      validationHostedZones: [{
-        hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-          hostedZoneId: this.props.dnsDelegation.hostedZoneId,
-          zoneName: this.props.domainName
-        }),
-        validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
-          mutable: false
-        })
-      }],
-      domainName: this.props.domainName,
-      certificateRegion: 'us-east-1'
-    });
-
     this.httpApi = new HttpApi(this, 'HttpApi');
 
-    const distribution = new Distribution(this, 'Distribution', {
-      certificate,
-      domainNames: [this.props.domainName],
-      defaultBehavior: {
-        origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-      },
-      additionalBehaviors: {
-        '/auth': {
-          origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
-          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-        }
-      },
-      httpVersion: HttpVersion.HTTP2_AND_3,
-    });
-
-    new CrossAccountRoute53RecordSet(this, 'DNSRecords', {
-      delegationRoleName: this.props.dnsDelegation.roleName,
-      delegationRoleAccount: this.props.dnsDelegation.account,
-      hostedZoneId: this.props.dnsDelegation.hostedZoneId,
-      resourceRecordSets: [
-        {
-          Name: this.props.domainName,
-          Type: RecordType.A,
-          AliasTarget: {
-            DNSName: distribution.distributionDomainName,
-            HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
-            EvaluateTargetHealth: false,
-          },
-        },
-        {
-          Name: this.props.domainName,
-          Type: RecordType.AAAA,
-          AliasTarget: {
-            DNSName: distribution.distributionDomainName,
-            HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
-            EvaluateTargetHealth: false,
-          },
-        }
-      ],
-    });
-  }
-
-  private createApiRoutes() {
     const secret = Secret.fromSecretNameV2(this, 'UserAuthToken', this.props.wclTokenSecretName);
 
     const raidFunction = new NodejsFunction(this, 'RaidFunction', {
@@ -167,5 +109,137 @@ export class LogRedirectStack extends cdk.Stack {
       integration:  new HttpLambdaIntegration('AuthIntegration', authFunction),
     })
 
+  }
+
+  private createFrontend() {
+    const bucket = new Bucket(this, 'FrontendBucket', {
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      encryption: BucketEncryption.S3_MANAGED
+    });
+
+    new BucketDeployment(this, 'FrontendDeployment', {
+      destinationBucket: bucket,
+      exclude: ['index.html'],
+      sources: [
+        Source.asset('./frontend/log-redirect/dist', {
+          // Exclude files from bundling
+          exclude: ['*.map', 'index.html'],
+        }),
+      ],
+      cacheControl: [
+        CacheControl.fromString('public, max-age=31536000, immutable'),
+      ],
+
+    });
+
+    new BucketDeployment(this, 'ConfigDeployment', {
+      destinationBucket: bucket,
+      // Exclude everything not related to this deployment to prevent other files from being deleted
+      exclude: ['*'],
+      include: ['index.html'],
+      sources: [
+        Source.asset('./frontend/log-redirect/dist', {
+          // Bundle only index.html
+          exclude: ['*', '!index.html'],
+        })
+      ],
+      cacheControl: [
+        CacheControl.fromString('public, max-age=300'),
+      ],
+    });
+
+    const originAccessIdentity = new OriginAccessIdentity(this, 'OriginAccessIdentity');
+    bucket.grantRead(originAccessIdentity);
+
+    this.frontendOrigin = new S3Origin(bucket, {
+      originAccessIdentity,
+    });
+  }
+
+  private createDistribution() {
+    const certificate = new DnsValidatedCertificate(this, 'Certificate', {
+      validationHostedZones: [{
+        hostedZone: HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+          hostedZoneId: this.props.dnsDelegation.hostedZoneId,
+          zoneName: this.props.domainName
+        }),
+        validationRole: Role.fromRoleArn(this, 'CertificateValidationRole', 'arn:aws:iam::' + this.props.dnsDelegation.account + ':role/' + this.props.dnsDelegation.roleName, {
+          mutable: false
+        })
+      }],
+      domainName: this.props.domainName,
+      certificateRegion: 'us-east-1'
+    });
+
+    const frontendBehavior = {
+      origin: this.frontendOrigin,
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachePolicy: new CachePolicy(this, 'DefaultCachePolicy', {
+        minTtl: Duration.seconds(1),
+        defaultTtl: Duration.days(365),
+        maxTtl: Duration.days(365),
+      }),
+    }
+
+    const apiBehavior = {
+      origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+    }
+
+    const distribution = new Distribution(this, 'Distribution', {
+      certificate,
+      domainNames: [this.props.domainName],
+      defaultRootObject: 'index.html',
+
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+      ],
+
+      defaultBehavior: frontendBehavior,
+      additionalBehaviors: {
+        '/raid': apiBehavior,
+        '/mythplus': apiBehavior,
+        '/auth': {
+          origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        }
+      },
+      httpVersion: HttpVersion.HTTP2_AND_3,
+    });
+
+    new CrossAccountRoute53RecordSet(this, 'DNSRecords', {
+      delegationRoleName: this.props.dnsDelegation.roleName,
+      delegationRoleAccount: this.props.dnsDelegation.account,
+      hostedZoneId: this.props.dnsDelegation.hostedZoneId,
+      resourceRecordSets: [
+        {
+          Name: this.props.domainName,
+          Type: RecordType.A,
+          AliasTarget: {
+            DNSName: distribution.distributionDomainName,
+            HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
+            EvaluateTargetHealth: false,
+          },
+        },
+        {
+          Name: this.props.domainName,
+          Type: RecordType.AAAA,
+          AliasTarget: {
+            DNSName: distribution.distributionDomainName,
+            HostedZoneId: 'Z2FDTNDATAQYW2', // Cloudfront Hosted Zone ID
+            EvaluateTargetHealth: false,
+          },
+        }
+      ],
+    });
   }
 }

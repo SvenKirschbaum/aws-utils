@@ -73,6 +73,12 @@ jobs:
       - name: Install Lambda dependencies
         working-directory: ./lambda/log-redirect
         run: npm ci
+      - name: Install frontend dependencies
+        working-directory: ./frontend/log-redirect
+        run: npm ci
+      - name: Build frontend
+        working-directory: ./frontend/log-redirect
+        run: npm run build
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/log-redirect.ts"
       - name: Upload artifact
