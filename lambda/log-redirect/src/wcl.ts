@@ -15,6 +15,7 @@ const gqlQuery = gql`
             reports(userID: $userId, limit: 25) {
                 data {
                     code
+                    title
                     visibility
                     fights {
                         difficulty
@@ -96,3 +97,10 @@ export async function getLatestMythPlusReport() {
 }
 
 export const REPORT_URL_PREFIX = 'https://www.warcraftlogs.com/reports/';
+
+export function filterReportData(report: Report) {
+    return {
+        ...report,
+        fights: []
+    };
+}

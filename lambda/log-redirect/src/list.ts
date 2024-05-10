@@ -3,7 +3,7 @@ import middy from "@middy/core";
 import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
-import {getMythPlusReports, getRaidReports, REPORT_URL_PREFIX, reportsAge} from "./wcl";
+import {filterReportData, getMythPlusReports, getRaidReports, reportsAge} from "./wcl";
 import {logger, tracer} from "./util";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
@@ -13,11 +13,12 @@ import httpResponseSerializerMiddleware from '@middy/http-response-serializer'
 const lambdaHandler = async function (_: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
     const data = {
-        raid: await getRaidReports(),
-        mythPlus: await getMythPlusReports()
+        raid: (await getRaidReports()).map(report => filterReportData(report)),
+        mythPlus: (await getMythPlusReports()).map(report => filterReportData(report))
     }
 
     return {
+        statusCode: 200,
         headers: {
             'Expires': reportsAge.plus({minute: 5}).toHTTP() as string
         },
