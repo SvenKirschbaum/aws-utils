@@ -1,23 +1,30 @@
 import * as cdk from 'aws-cdk-lib';
 import {R53DelegationRoleInfo} from "./constructs/util";
 import {Construct} from "constructs";
-import {Duration, RemovalPolicy} from "aws-cdk-lib";
+import {Duration, Fn, RemovalPolicy} from "aws-cdk-lib";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
 import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deployment";
 import {
     CachePolicy,
     Distribution, HttpVersion,
-    OriginAccessIdentity,
+    OriginAccessIdentity, OriginRequestPolicy,
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
-import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
+import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {DnsValidatedCertificate} from "@trautonen/cdk-dns-validated-certificate";
 import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {Role} from "aws-cdk-lib/aws-iam";
 import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
+import {HttpApi} from "aws-cdk-lib/aws-apigatewayv2";
+import {Secret} from "aws-cdk-lib/aws-secretsmanager";
+import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
+import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
+import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 export interface CharacterListStackProps extends cdk.StackProps {
     domainName: string,
+    battlenetCredentialsSecretName: string,
     dnsDelegation: R53DelegationRoleInfo
 }
 
@@ -25,6 +32,7 @@ export class CharacterListStack extends cdk.Stack {
 
     private props: CharacterListStackProps;
     private frontendOrigin: S3Origin;
+    private httpApi: HttpApi;
 
     constructor(scope: Construct, id: string, props: CharacterListStackProps) {
         super(scope, id, props);
@@ -32,15 +40,19 @@ export class CharacterListStack extends cdk.Stack {
         this.props = props;
 
         this.createFrontend();
+        this.createApi();
         this.createDistribution();
     }
 
     private createFrontend() {
         const bucket = new Bucket(this, 'FrontendBucket', {
-            blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+            blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
+            publicReadAccess: true,
             removalPolicy: RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
-            encryption: BucketEncryption.S3_MANAGED
+            encryption: BucketEncryption.S3_MANAGED,
+            websiteIndexDocument: 'index.html',
+            websiteErrorDocument: 'index.html',
         });
 
         new BucketDeployment(this, 'FrontendDeployment', {
@@ -55,7 +67,6 @@ export class CharacterListStack extends cdk.Stack {
             cacheControl: [
                 CacheControl.fromString('public, max-age=31536000, immutable'),
             ],
-
         });
 
         new BucketDeployment(this, 'ConfigDeployment', {
@@ -112,15 +123,17 @@ export class CharacterListStack extends cdk.Stack {
             domainNames: [this.props.domainName],
             defaultRootObject: 'index.html',
 
-            errorResponses: [
-                {
-                    httpStatus: 404,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                },
-            ],
-
             defaultBehavior: frontendBehavior,
+
+            additionalBehaviors: {
+                '/api/*': {
+                    origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+                    viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cachePolicy: CachePolicy.CACHING_DISABLED,
+                    originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+                },
+            },
+
             httpVersion: HttpVersion.HTTP2_AND_3,
         });
 
@@ -148,6 +161,72 @@ export class CharacterListStack extends cdk.Stack {
                     },
                 }
             ],
+        });
+    }
+
+    private createApi() {
+        this.httpApi = new HttpApi(this, 'HttpApi');
+
+        const secret = Secret.fromSecretNameV2(this, 'BattlenetCredentialst', this.props.battlenetCredentialsSecretName);
+
+        const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {
+            entry: 'lambda/character-list/src/auth/start.ts',
+            runtime: Runtime.NODEJS_18_X,
+            architecture: Architecture.ARM_64,
+            logRetention: RetentionDays.THREE_DAYS,
+            timeout: Duration.seconds(10),
+            tracing: Tracing.ACTIVE,
+            memorySize: 1769,
+            environment: {
+                'BASE_DOMAIN': this.props.domainName,
+                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+            }
+        });
+        secret.grantRead(authStartFunction);
+
+        this.httpApi.addRoutes({
+            path: '/api/auth/start',
+            integration:  new HttpLambdaIntegration('AuthStartIntegration', authStartFunction)
+        });
+
+        const authCallbackFunction = new NodejsFunction(this, 'AuthCallbackFunction', {
+            entry: 'lambda/character-list/src/auth/callback.ts',
+            runtime: Runtime.NODEJS_18_X,
+            architecture: Architecture.ARM_64,
+            logRetention: RetentionDays.THREE_DAYS,
+            timeout: Duration.seconds(10),
+            tracing: Tracing.ACTIVE,
+            memorySize: 1769,
+            environment: {
+                'BASE_DOMAIN': this.props.domainName,
+                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+            }
+        });
+        secret.grantRead(authCallbackFunction);
+
+        this.httpApi.addRoutes({
+            path: '/api/auth/callback',
+            integration:  new HttpLambdaIntegration('AuthCallbackIntegration', authCallbackFunction)
+        });
+
+        const listCharactersFunction = new NodejsFunction(this, 'ListCharactersFunction', {
+            entry: 'lambda/character-list/src/characters.ts',
+            runtime: Runtime.NODEJS_18_X,
+            architecture: Architecture.ARM_64,
+            logRetention: RetentionDays.THREE_DAYS,
+            timeout: Duration.seconds(10),
+            tracing: Tracing.ACTIVE,
+            memorySize: 1769,
+            environment: {
+                'BASE_DOMAIN': this.props.domainName,
+                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+            }
+        });
+        secret.grantRead(listCharactersFunction);
+
+        this.httpApi.addRoutes({
+            path: '/api/characters/{region}',
+            integration:  new HttpLambdaIntegration('ListCharactersIntegration', listCharactersFunction)
         });
     }
 }
