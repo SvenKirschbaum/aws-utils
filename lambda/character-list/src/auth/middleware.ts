@@ -22,12 +22,17 @@ export const sessionMiddleware = (opts = {}) => {
 
             const secret = await getSessionKey()
 
-            const { payload} = await jose.jwtDecrypt(token[0] as string, secret, {
-                issuer: process.env.BASE_DOMAIN as string,
-                audience: process.env.BASE_DOMAIN as string,
-            });
+            try {
+                const { payload} = await jose.jwtDecrypt(token[0] as string, secret, {
+                    issuer: process.env.BASE_DOMAIN as string,
+                    audience: process.env.BASE_DOMAIN as string,
+                });
 
-            request.event.session = payload as any as SessionPayload;
+                request.event.session = payload as any as SessionPayload;
+            } catch (e) {
+                console.log("Error decrypting token", e);
+                throw createError(401, 'Invalid session');
+            }
         },
         after: async (response: any) => {
 
