@@ -46,7 +46,10 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
 
     return {
         statusCode: 200,
-        body: data
+        headers: {
+            "Cache-Control": "max-age=300, s-maxage=3600",
+        },
+        body: data,
     }
 }
 

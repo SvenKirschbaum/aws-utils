@@ -5,7 +5,8 @@ import {Duration, Fn, RemovalPolicy} from "aws-cdk-lib";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
 import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deployment";
 import {
-    CachePolicy,
+    CacheCookieBehavior, CacheHeaderBehavior,
+    CachePolicy, CacheQueryStringBehavior,
     Distribution, HttpVersion,
     OriginAccessIdentity, OriginRequestPolicy,
     ViewerProtocolPolicy
@@ -129,11 +130,17 @@ export class CharacterListStack extends cdk.Stack {
                 '/api/*': {
                     origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
                     viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                    cachePolicy: CachePolicy.CACHING_DISABLED,
+                    cachePolicy: new CachePolicy(this, 'ApiCachePolicy', {
+                        minTtl: Duration.seconds(0),
+                        defaultTtl: Duration.seconds(0),
+                        maxTtl: Duration.days(1),
+                        cookieBehavior: CacheCookieBehavior.allowList('session', 'state'),
+                        headerBehavior: CacheHeaderBehavior.none(),
+                        queryStringBehavior: CacheQueryStringBehavior.all()
+                    }),
                     originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
                 },
             },
-
             httpVersion: HttpVersion.HTTP2_AND_3,
         });
 
