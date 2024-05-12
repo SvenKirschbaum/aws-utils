@@ -9,3 +9,63 @@
     justify-content: center;
     align-items: center;
 }
+
+.color-class-1 {
+    color: #C69B6D;
+}
+
+.color-class-2 {
+    color: #F48CBA;
+}
+
+.color-class-3 {
+    color: #AAD372;
+}
+
+.color-class-4 {
+    color: #FFF468;
+}
+
+.color-class-5 {
+    color: #FFFFFF;
+}
+
+.color-class-6 {
+    color: #C41E3A;
+}
+
+.color-class-7 {
+    color: #0070DD;
+}
+
+.color-class-8 {
+    color: #3FC7EB;
+}
+
+.color-class-9 {
+    color: #8788EE;
+}
+
+.color-class-10 {
+    color: #00FF98;
+}
+
+.color-class-11 {
+    color: #FF7C0A;
+}
+
+.color-class-12 {
+    color: #A330C9;
+}
+
+.color-class-13 {
+    color: #33937F;
+}
+
+.color-faction-ALLIANCE {
+    color: #1269FF;
+}
+
+.color-faction-HORDE {
+    color: #FF4545;
+}

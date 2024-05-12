@@ -44,7 +44,7 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)') || true; // Light mode doesn't work well with class colors.
 
     const theme = useMemo(() =>
             createTheme({
@@ -81,11 +81,11 @@ function CharacterList() {
     const rows: GridRowModel[] = [];
 
     const columns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', width: 150 },
+        { field: 'name', headerName: 'Name', width: 150, cellClassName: (params) => `color-class-${params.row.classId}`},
         { field: 'level', headerName: 'Level', width: 150 },
-        { field: 'class', headerName: 'Class', width: 150 },
+        { field: 'className', headerName: 'Class', width: 150, cellClassName: (params) => `color-class-${params.row.classId}`},
         { field: 'realm', headerName: 'Realm', width: 150 },
-        { field: 'faction', headerName: 'Faction', width: 150 },
+        { field: 'factionName', headerName: 'Faction', width: 150, cellClassName: (params) => `color-faction-${params.row.factionType}`},
         { field: 'race', headerName: 'Race', width: 150 },
         { field: 'gender', headerName: 'Gender', width: 150 },
         { field: 'account', headerName: 'Account Index'},
@@ -98,9 +98,11 @@ function CharacterList() {
                 account: accountIndex+1,
                 name: character.name,
                 level: character.level,
-                class: character.playable_class.name,
+                classId: character.playable_class.id,
+                className: character.playable_class.name,
                 realm: character.realm.name,
-                faction: character.faction.name,
+                factionName: character.faction.name,
+                factionType: character.faction.type,
                 race: character.playable_race.name,
                 gender: character.gender.name,
             });
