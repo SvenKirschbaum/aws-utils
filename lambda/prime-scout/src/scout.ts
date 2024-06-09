@@ -17,7 +17,7 @@ import { JSDOM } from 'jsdom'
 const tracer = new Tracer();
 const logger = new Logger();
 
-const teamRegex = /^https:\/\/www\.primeleague\.gg\/leagues\/teams\/\d+-.+$/;
+const teamRegex = /^https:\/\/www\.primeleague\.gg\/leagues(?:[\d\w\-\/]+)?\/teams\/\d+-.+$/;
 const matchRegex = /^https:\/\/www\.primeleague\.gg\/leagues\/matches\/(\d+)-.+$/;
 
 const playerBlacklist = ["Kill Like A Sir#WWE", "ĐamnTaco#303", "Brand#WWE", "Greedy Hero#WWE", "Joghurt#EUW"];
@@ -85,6 +85,10 @@ const lambdaHandler = async function (event: APIGatewayProxyEventV2): Promise<AP
 
             for (const j in lineup) {
                 const player = lineup[j] as any;
+
+                // There is weird metadata objects in the lineup array
+                if (!player.gameaccounts || player.gameaccounts.length < 1) continue;
+
                 const gameAccount = player.gameaccounts[0] as string;
 
                 if(playerBlacklist.includes(gameAccount)) {
