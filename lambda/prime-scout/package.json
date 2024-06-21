@@ -4,21 +4,21 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "2.2.0",
     "@aws-lambda-powertools/tracer": "2.2.0",
-    "@middy/core": "5.4.0",
-    "@middy/http-header-normalizer": "5.4.0",
-    "@middy/http-error-handler": "5.4.0",
-    "@middy/http-response-serializer": "5.4.0",
-    "@middy/error-logger": "5.4.0",
-    "@middy/http-content-negotiation": "5.4.0",
-    "@middy/http-json-body-parser": "5.4.0",
+    "@middy/core": "5.4.1",
+    "@middy/http-header-normalizer": "5.4.1",
+    "@middy/http-error-handler": "5.4.1",
+    "@middy/http-response-serializer": "5.4.1",
+    "@middy/error-logger": "5.4.1",
+    "@middy/http-content-negotiation": "5.4.1",
+    "@middy/http-json-body-parser": "5.4.1",
     "luxon": "3.4.4",
     "node-fetch": "^3.3.2",
     "jsdom": "^24.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.138",
+    "@types/aws-lambda": "8.10.140",
     "@types/http-errors": "2.0.4",
-    "typescript": "5.4.5",
+    "typescript": "5.5.2",
     "@types/luxon": "3.4.2",
     "@types/jsdom": "^21.1.6"
   }
