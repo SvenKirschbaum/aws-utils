@@ -2,20 +2,20 @@
   "name": "character-list-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.3.0",
-    "@aws-lambda-powertools/tracer": "2.3.0",
-    "@aws-sdk/client-secrets-manager": "3.609.0",
-    "@middy/core": "5.4.3",
-    "@middy/http-header-normalizer": "5.4.3",
-    "@middy/http-error-handler": "5.4.3",
-    "@middy/http-response-serializer": "5.4.3",
-    "@middy/error-logger": "5.4.3",
-    "@middy/http-content-negotiation": "5.4.3",
+    "@aws-lambda-powertools/logger": "2.4.0",
+    "@aws-lambda-powertools/tracer": "2.4.0",
+    "@aws-sdk/client-secrets-manager": "3.614.0",
+    "@middy/core": "5.4.4",
+    "@middy/http-header-normalizer": "5.4.4",
+    "@middy/http-error-handler": "5.4.4",
+    "@middy/http-response-serializer": "5.4.4",
+    "@middy/error-logger": "5.4.4",
+    "@middy/http-content-negotiation": "5.4.4",
     "openid-client": "5.6.5",
     "node-jose": "2.2.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.140",
+    "@types/aws-lambda": "8.10.141",
     "@types/http-errors": "2.0.4",
     "typescript": "5.5.3"
   }
