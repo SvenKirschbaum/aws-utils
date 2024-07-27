@@ -12,7 +12,7 @@ import {
 } from "aws-cdk-lib/aws-route53";
 import {AccountPrincipal, Effect, PolicyStatement, ServicePrincipal} from "aws-cdk-lib/aws-iam";
 import {
-    DefaultDomainRecords,
+    DefaultDomainRecords, GoogleMailRecords,
     HostRecord,
 } from "./constructs/CommonRecords";
 import {CrossAccountRoute53Role, Route53User} from "@fallobst22/cdk-cross-account-route53";
@@ -177,6 +177,11 @@ export class DNSStack extends Stack {
     private createKirschbaumCloudRecords(zone: IPublicHostedZone) {
         new CaaAmazonRecord(zone, 'CaaAmazon', {
             zone
+        });
+
+        new GoogleMailRecords(this, 'Mail', {
+            zone,
+            domainKeys: DOMAINS["kirschbaum.cloud"].domainKeys
         });
     }
 

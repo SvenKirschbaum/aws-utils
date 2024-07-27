@@ -64,6 +64,9 @@ export const DOMAINS: {[key: string]: DomainProperties} = {
     },
     'kirschbaum.cloud': {
         defaultRecords: false,
+        domainKeys: {
+            'g27072024': 'v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtw2x1ArPmOjOiH3eBJpRKfY4Om18pT7yKU6UPZnzeHSXZjbHdA4WRA9QYXrb/08u8jAlhwBm4EI2SLdOzSUB+HuxB3HXkncincXM/PvegWlELgtwhgVjXYr8nMbnPE3Lqu67kHKagzz7nnX8re0DSQSO92WaoSzTORu4UXFS/WKTcyAtuF+bAty/R6LxtIjwy1i6UNaob+ElVqi6abHT2hYpLieUZpaGHIYHlQFWfdnk4e4qI9cfClzaMKNNmZVsW4HBJoql3WAg78f6OXh44wjDE7XXwj+tfE84unRi/lmHR8PVIKcNuLfDKPqOkuEOZcvGBvi6gqfX0sxR9FAmZwIDAQAB'
+        }
     },
     'bund-von-theramore.de': {
         defaultRecords: true,
@@ -85,6 +88,9 @@ export const DOMAINS: {[key: string]: DomainProperties} = {
     },
     'grillteller42.de': {
         defaultRecords: true,
+        domainKeys: {
+            'g27072024': 'v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjsmiMpaLsyGE6RRRELoUE6+wlZWYI7acYi3Sgs0xyRYgcubkH8WG1Vf/xf2NltOocIJL7Hf7MjCC0AQD+Q7QnZMictqGsjxl1VG6ZY9UzMdgP4TZMVg5lRA8lcecC/1ZpmldWHasgT2E+TW4xrgtax1lPqR93N0C1y38kEa9McfXiayp5NLD0uygYDCyc44QS3fo8hnsS2TBrCqSFY5fKjGBGs7UMt9sgWoQU1yQJL4aX4Ad2eU8kUDq1scdJhjCllfUxpCaabqa3Gb1yZxnWShznbIVYrigfnjAEztL3hxqXb2+lMwoEuCh8Py4FcpjCgJSr315RGnR1vJrxkrLHwIDAQAB'
+        }
     },
     'trigardon-rg.de': {
         defaultRecords: true,
