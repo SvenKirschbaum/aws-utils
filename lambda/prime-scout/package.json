@@ -2,8 +2,8 @@
   "name": "prime-scout-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.5.0",
-    "@aws-lambda-powertools/tracer": "2.5.0",
+    "@aws-lambda-powertools/logger": "2.6.0",
+    "@aws-lambda-powertools/tracer": "2.6.0",
     "@middy/core": "5.4.5",
     "@middy/http-header-normalizer": "5.4.5",
     "@middy/http-error-handler": "5.4.5",
@@ -16,9 +16,9 @@
     "jsdom": "^24.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.141",
+    "@types/aws-lambda": "8.10.142",
     "@types/http-errors": "2.0.4",
-    "typescript": "5.5.3",
+    "typescript": "5.5.4",
     "@types/luxon": "3.4.2",
     "@types/jsdom": "^21.1.6"
   }
