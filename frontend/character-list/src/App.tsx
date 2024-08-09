@@ -91,7 +91,7 @@ function CharacterList() {
         { field: 'account', headerName: 'Account Index'},
     ];
 
-    data.wow_accounts.forEach((account: any, accountIndex: number) => {
+    data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
         account.characters.forEach((character: any) => {
             rows.push({
                 id: character.id,

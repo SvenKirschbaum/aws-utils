@@ -20,36 +20,38 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
         body: 'Invalid region',
     }
 
-    const response = await fetch(`https://${region}.api.blizzard.com/profile/user/wow?namespace=profile-${region}&locale=en_US`,{
+    const profileResponse = await fetch(`https://${region}.api.blizzard.com/profile/user/wow?namespace=profile-${region}&locale=en_US`,{
         headers: {
             Authorization: `Bearer ${request.session.battleNet.access_token}`,
         }
     });
 
     //No characters in this region
-    if(response.status === 404) return {
+    if(profileResponse.status === 404) return {
         statusCode: 200,
         body: {
             wow_accounts: []
         } as any
     }
 
-    if(response.status === 401) return {
+    if(profileResponse.status === 401) return {
         statusCode: 401,
     }
 
-    if(!response.ok) return {
+    if(!profileResponse.ok) return {
         statusCode: 500,
     }
 
-    const data = await response.json();
+    const profileData = await profileResponse.json();
 
     return {
         statusCode: 200,
         headers: {
             "Cache-Control": "max-age=300, s-maxage=3600",
         },
-        body: data,
+        body: {
+            profile: profileData
+        } as any,
     }
 }
 
