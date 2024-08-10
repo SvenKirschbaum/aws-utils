@@ -90,3 +90,18 @@
 .completion-full {
     color: green;
 }
+
+.encounter {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.encounter-done {
+    color: limegreen;
+}
+
+.encounter-not-done {
+    color: red;
+}

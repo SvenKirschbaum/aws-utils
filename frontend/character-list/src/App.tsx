@@ -7,10 +7,12 @@ import {
     createTheme,
     CssBaseline, MenuItem,
     Select, Stack,
-    ThemeProvider,
+    ThemeProvider, Tooltip,
     useMediaQuery
 } from "@mui/material";
 import {DataGrid, GridColDef, GridFooter, GridFooterContainer, GridRowModel} from "@mui/x-data-grid";
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
 import {ErrorBoundary} from "react-error-boundary";
 import {DIFFUCULTY_ABBREVIATIONS, RAID_ABBREVIATIONS, REGIONS, WEEKLY_RESET} from "./constants.tsx";
@@ -184,7 +186,31 @@ function ModeStatus(props: any) {
     //Variant is either none, partial or full
     const variant = killsThisWeek === props.progress.total_count ? 'full' : killsThisWeek > 0 ? 'partial' : 'none';
 
-    return <span className={"completion-"+variant}>{`${killsThisWeek}/${props.progress.total_count} ${name}`} </span>;
+    return (
+        <Tooltip title={<RaidTooltip encounters={props.progress.encounters} />} placement={"right"} arrow={true}>
+            <span className={"completion-"+variant}>{`${killsThisWeek}/${props.progress.total_count} ${name}`} </span>
+        </Tooltip>
+    );
+}
+
+function RaidTooltip(props: any) {
+    const routeParams = useParams() as {region: string};
+    const region = routeParams.region.toUpperCase();
+    const encounters = props.encounters.map((encounter: any) => ({
+        name: encounter.encounter.name,
+        done: DateTime.fromMillis(encounter.last_kill_timestamp) > WEEKLY_RESET[region],
+    }));
+
+    return (
+        <div className={"encounter-tooltip"}>
+            {encounters.map((encounter: any) =>
+                <div className={"encounter"} key={encounter.name}>
+                    <div>{encounter.name}</div>
+                    <>{encounter.done ? <CheckIcon className={"encounter-done"} />: <CloseIcon className={"encounter-not-done"} />}</>
+                </div>
+            )}
+        </div>
+    );
 }
 
 function Footer() {
