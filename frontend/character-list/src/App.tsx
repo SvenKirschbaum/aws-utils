@@ -93,6 +93,7 @@ function CharacterList() {
         { field: 'race', headerName: 'Race', headerAlign: 'center' },
         { field: 'gender', headerName: 'Gender', headerAlign: 'center' },
         { field: 'account', headerName: 'Account', headerAlign: 'center'},
+        { field: 'sort'},
         { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
     ];
 
@@ -111,6 +112,14 @@ function CharacterList() {
                 race: character.playable_race.name,
                 gender: character.gender.name,
                 raids: data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`],
+                sort: (data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
+                    instance.modes.forEach((mode: any) => {
+                        mode.progress.encounters.forEach((encounter: any) => {
+                            totalKills += encounter.completed_count;
+                        });
+                    });
+                    return totalKills;
+                }, 0) || 0) + character.level*1000
             });
         });
     });
@@ -123,11 +132,17 @@ function CharacterList() {
                     textAlign: 'center',
                 },
             }}
+            disableColumnSelector={true}
+            columnVisibilityModel={{
+                sort: false
+            }}
             rows={rows}
             columns={columns}
             initialState={{
                 sorting: {
-                    sortModel: [{ field: 'level', sort: 'desc' }],
+                    sortModel: [
+                        { field: 'sort', sort: 'desc' },
+                    ],
                 },
                 pagination: { paginationModel: { pageSize: 15 } }
             }}
@@ -224,7 +239,7 @@ function Footer() {
     return (
         <GridFooterContainer>
             <Stack direction={"row"} justifyContent={"space-between"} width={"100%"}>
-                <Select className="region-selection" value={region} onChange={onChange}>
+                <Select className="region-selection" value={region} onChange={onChange} variant={"outlined"}>
                     {REGIONS.map((region) => (
                         <MenuItem key={region} value={region}>{region.toUpperCase()}</MenuItem>
                     ))}
