@@ -12,8 +12,10 @@ import {
 } from "@mui/material";
 import {DataGrid, GridColDef, GridFooter, GridFooterContainer, GridRowModel} from "@mui/x-data-grid";
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
+import {ErrorBoundary} from "react-error-boundary";
+import {DIFFUCULTY_ABBREVIATIONS, RAID_ABBREVIATIONS, REGIONS, WEEKLY_RESET} from "./constants.tsx";
+import {DateTime} from "luxon";
 
-const REGIONS = ['eu', 'us', 'kr', 'tw']
 const router = createBrowserRouter([
     {
         Component: LoadingWrapper,
@@ -81,14 +83,15 @@ function CharacterList() {
     const rows: GridRowModel[] = [];
 
     const columns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', width: 150, cellClassName: (params) => `color-class-${params.row.classId}`},
-        { field: 'level', headerName: 'Level', width: 150 },
-        { field: 'className', headerName: 'Class', width: 150, cellClassName: (params) => `color-class-${params.row.classId}`},
-        { field: 'realm', headerName: 'Realm', width: 150 },
-        { field: 'factionName', headerName: 'Faction', width: 150, cellClassName: (params) => `color-faction-${params.row.factionType}`},
-        { field: 'race', headerName: 'Race', width: 150 },
-        { field: 'gender', headerName: 'Gender', width: 150 },
-        { field: 'account', headerName: 'Account Index'},
+        { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
+        { field: 'level', headerName: 'Level', headerAlign: 'center' },
+        { field: 'className', headerName: 'Class', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
+        { field: 'realm', headerName: 'Realm', headerAlign: 'center' },
+        { field: 'factionName', headerName: 'Faction', headerAlign: 'center', cellClassName: (params) => `color-faction-${params.row.factionType}`},
+        { field: 'race', headerName: 'Race', headerAlign: 'center' },
+        { field: 'gender', headerName: 'Gender', headerAlign: 'center' },
+        { field: 'account', headerName: 'Account', headerAlign: 'center'},
+        { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
     ];
 
     data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
@@ -105,29 +108,83 @@ function CharacterList() {
                 factionType: character.faction.type,
                 race: character.playable_race.name,
                 gender: character.gender.name,
+                raids: data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`],
             });
         });
     });
 
     return (
         <DataGrid
+            sx={{
+                '& .MuiDataGrid-cell': {
+                    padding: '0.5em',
+                    textAlign: 'center',
+                },
+            }}
             rows={rows}
             columns={columns}
             initialState={{
                 sorting: {
                     sortModel: [{ field: 'level', sort: 'desc' }],
                 },
+                pagination: { paginationModel: { pageSize: 15 } }
             }}
             autosizeOnMount={true}
             autosizeOptions={{
-                expand: true
+                expand: true,
+                includeHeaders: false,
+                includeOutliers: true
             }}
-            autoPageSize={true}
+            autoPageSize={false}
+            autoHeight={true}
+            getRowHeight={() => 'auto'}
+            pageSizeOptions={[15]}
             slots={{
                 footer: Footer
             }}
         />
     );
+}
+
+function RaidStatusWrapper(props: any) {
+    return (
+        <ErrorBoundary fallback={<span>Error</span>}>
+            <RaidStatus {...props} />
+        </ErrorBoundary>
+    )
+}
+
+function RaidStatus(props: {value: any}) {
+    if(!props.value) {
+        return "";
+    }
+
+    return (
+        <div className={'raid-status'}>
+            {props.value.map((instance: any) => <InstanceStatus key={instance.instance.id} {...instance} />)}
+        </div>
+    );
+}
+
+function InstanceStatus(props: {instance: any, modes: any}) {
+    return (
+        <div className={'instance-status'}>
+            {RAID_ABBREVIATIONS[props.instance.id] || props.instance.name}: {props.modes.map((mode: any) => <ModeStatus key={mode.difficulty.type} {...mode} />)}
+        </div>
+    )
+}
+
+function ModeStatus(props: any) {
+    const routeParams = useParams() as {region: string};
+    const region = routeParams.region.toUpperCase();
+
+    const name = DIFFUCULTY_ABBREVIATIONS[props.difficulty.type] || props.difficulty.name;
+    const killsThisWeek = props.progress.encounters.filter((encounter: any) => DateTime.fromMillis(encounter.last_kill_timestamp) > WEEKLY_RESET[region]).length;
+
+    //Variant is either none, partial or full
+    const variant = killsThisWeek === props.progress.total_count ? 'full' : killsThisWeek > 0 ? 'partial' : 'none';
+
+    return <span className={"completion-"+variant}>{`${killsThisWeek}/${props.progress.total_count} ${name}`} </span>;
 }
 
 function Footer() {

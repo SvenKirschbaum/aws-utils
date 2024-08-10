@@ -69,3 +69,24 @@
 .color-faction-HORDE {
     color: #FF4545;
 }
+
+.raid-status {
+    display: flex;
+    flex-direction: column;
+}
+
+.instance-status {
+
+}
+
+.completion-none {
+    color: red;
+}
+
+.completion-partial {
+    color: orange;
+}
+
+.completion-full {
+    color: green;
+}
