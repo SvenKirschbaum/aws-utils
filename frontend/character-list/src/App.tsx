@@ -15,7 +15,15 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
 import {ErrorBoundary} from "react-error-boundary";
-import {DIFFUCULTY_ABBREVIATIONS, RAID_ABBREVIATIONS, REGIONS, WEEKLY_RESET} from "./constants.tsx";
+import {
+    CLASSES,
+    DIFFUCULTY_ABBREVIATIONS,
+    FACTIONS, GENDERS,
+    RACES,
+    RAID_ABBREVIATIONS,
+    REGIONS,
+    WEEKLY_RESET
+} from "./constants.tsx";
 import {DateTime} from "luxon";
 
 const router = createBrowserRouter([
@@ -79,23 +87,23 @@ function App() {
     );
 }
 
+const columns: GridColDef[] = [
+    { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
+    { field: 'level', headerName: 'Level', headerAlign: 'center', type: 'number'},
+    { field: 'className', headerName: 'Class', headerAlign: 'center', type: 'singleSelect', valueOptions: CLASSES, cellClassName: (params) => `color-class-${params.row.classId}`},
+    { field: 'realm', headerName: 'Realm', headerAlign: 'center' },
+    { field: 'factionName', headerName: 'Faction', headerAlign: 'center', type: 'singleSelect', valueOptions: FACTIONS, cellClassName: (params) => `color-faction-${params.row.factionType}`},
+    { field: 'race', headerName: 'Race', headerAlign: 'center', type: 'singleSelect', valueOptions: RACES},
+    { field: 'gender', headerName: 'Gender', headerAlign: 'center', type: 'singleSelect', valueOptions: GENDERS},
+    { field: 'account', headerName: 'Account', headerAlign: 'center', type: 'number'},
+    { field: 'sort'},
+    { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
+];
+
 function CharacterList() {
     const data: any = useLoaderData();
 
     const rows: GridRowModel[] = [];
-
-    const columns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
-        { field: 'level', headerName: 'Level', headerAlign: 'center' },
-        { field: 'className', headerName: 'Class', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
-        { field: 'realm', headerName: 'Realm', headerAlign: 'center' },
-        { field: 'factionName', headerName: 'Faction', headerAlign: 'center', cellClassName: (params) => `color-faction-${params.row.factionType}`},
-        { field: 'race', headerName: 'Race', headerAlign: 'center' },
-        { field: 'gender', headerName: 'Gender', headerAlign: 'center' },
-        { field: 'account', headerName: 'Account', headerAlign: 'center'},
-        { field: 'sort'},
-        { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
-    ];
 
     data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
         account.characters.forEach((character: any) => {
