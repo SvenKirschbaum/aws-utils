@@ -1,7 +1,8 @@
-import {useMemo} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import './App.css'
 import {Outlet, useLoaderData, useNavigate, useNavigation, useParams} from "react-router";
 import {
+    Button,
     CircularProgress,
     Container,
     createTheme,
@@ -10,7 +11,14 @@ import {
     ThemeProvider, Tooltip,
     useMediaQuery
 } from "@mui/material";
-import {DataGrid, GridColDef, GridFooter, GridFooterContainer, GridRowModel} from "@mui/x-data-grid";
+import {
+    DataGrid,
+    GridColDef,
+    GridFooter,
+    GridFooterContainer,
+    GridRowModel,
+    useGridApiRef
+} from "@mui/x-data-grid";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
@@ -96,44 +104,73 @@ const columns: GridColDef[] = [
     { field: 'race', headerName: 'Race', headerAlign: 'center', type: 'singleSelect', valueOptions: RACES},
     { field: 'gender', headerName: 'Gender', headerAlign: 'center', type: 'singleSelect', valueOptions: GENDERS},
     { field: 'account', headerName: 'Account', headerAlign: 'center', type: 'number'},
-    { field: 'sort'},
     { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
 ];
 
 function CharacterList() {
     const data: any = useLoaderData();
+    const apiRef = useGridApiRef();
+    const [key, setKey] = useState(0);
 
-    const rows: GridRowModel[] = [];
+    //Restore saved state
+    useEffect(() => {
+        const storedState = localStorage.getItem('gridState');
 
-    data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
-        account.characters.forEach((character: any) => {
-            rows.push({
-                id: character.id,
-                account: accountIndex+1,
-                name: character.name,
-                level: character.level,
-                classId: character.playable_class.id,
-                className: character.playable_class.name,
-                realm: character.realm.name,
-                factionName: character.faction.name,
-                factionType: character.faction.type,
-                race: character.playable_race.name,
-                gender: character.gender.name,
-                raids: data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`],
-                sort: (data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
-                    instance.modes.forEach((mode: any) => {
-                        mode.progress.encounters.forEach((encounter: any) => {
-                            totalKills += encounter.completed_count;
+        if(storedState) {
+            apiRef.current.restoreState(JSON.parse(storedState));
+        }
+    }, []);
+
+    //Save state on unload
+    const saveState = useCallback(() => {
+        localStorage.setItem('gridState', JSON.stringify(apiRef.current.exportState()));
+    }, []);
+    useEffect(() => {
+        window.addEventListener('beforeunload', saveState);
+        return () => {
+            window.removeEventListener('beforeunload', saveState);
+        };
+    }, []);
+
+    const rows: GridRowModel[] = useMemo(() => {
+        const r: GridRowModel[] = [];
+
+        data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
+            account.characters.forEach((character: any) => {
+                r.push({
+                    id: character.id,
+                    account: accountIndex+1,
+                    name: character.name,
+                    level: character.level,
+                    classId: character.playable_class.id,
+                    className: character.playable_class.name,
+                    realm: character.realm.name,
+                    factionName: character.faction.name,
+                    factionType: character.faction.type,
+                    race: character.playable_race.name,
+                    gender: character.gender.name,
+                    raids: data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`],
+                    sort: (data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
+                        instance.modes.forEach((mode: any) => {
+                            mode.progress.encounters.forEach((encounter: any) => {
+                                totalKills += encounter.completed_count;
+                            });
                         });
-                    });
-                    return totalKills;
-                }, 0) || 0) + character.level*1000
+                        return totalKills;
+                    }, 0) || 0) + character.level*1000
+                });
             });
         });
-    });
+
+        r.sort((a: any, b: any) => b.sort - a.sort);
+
+        return r;
+    }, [data]);
 
     return (
         <DataGrid
+            key={key}
+            apiRef={apiRef}
             sx={{
                 '& .MuiDataGrid-cell': {
                     padding: '0.5em',
@@ -141,17 +178,9 @@ function CharacterList() {
                 },
             }}
             disableColumnSelector={true}
-            columnVisibilityModel={{
-                sort: false
-            }}
             rows={rows}
             columns={columns}
             initialState={{
-                sorting: {
-                    sortModel: [
-                        { field: 'sort', sort: 'desc' },
-                    ],
-                },
                 pagination: { paginationModel: { pageSize: 15 } }
             }}
             autosizeOnMount={true}
@@ -166,6 +195,11 @@ function CharacterList() {
             pageSizeOptions={[15]}
             slots={{
                 footer: Footer
+            }}
+            slotProps={{
+                footer: {
+                    setKey
+                } as any
             }}
         />
     );
@@ -236,13 +270,18 @@ function RaidTooltip(props: any) {
     );
 }
 
-function Footer() {
+function Footer(props: any) {
     const {region} = useParams();
     const navigate = useNavigate();
 
     const onChange = (event: any) => {
         navigate(`/${event.target.value}`);
     };
+
+    const resetState = useCallback(() => {
+        localStorage.removeItem('gridState');
+        props.setKey((prev: number) => prev+1);
+    }, []);
 
     return (
         <GridFooterContainer>
@@ -252,6 +291,9 @@ function Footer() {
                         <MenuItem key={region} value={region}>{region.toUpperCase()}</MenuItem>
                     ))}
                 </Select>
+                <Button className="reset-button" variant={"outlined"} onClick={resetState}>
+                    Reset Sorting and Filters
+                </Button>
                 <GridFooter sx={{
                     border: 'none', // To delete double border.
                 }} >

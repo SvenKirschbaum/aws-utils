@@ -105,3 +105,7 @@
 .encounter-not-done {
     color: red;
 }
+
+.reset-button {
+    margin: 1em!important;
+}
