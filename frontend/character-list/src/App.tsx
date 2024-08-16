@@ -108,7 +108,10 @@ const columns: GridColDef[] = [
 ];
 
 function CharacterList() {
-    const data: any = useLoaderData();
+    const data: {
+        profile: any,
+        raids: {[char: string]: any[]}
+    } = useLoaderData() as any;
     const apiRef = useGridApiRef();
     const [key, setKey] = useState(0);
 
@@ -149,8 +152,8 @@ function CharacterList() {
                     factionType: character.faction.type,
                     race: character.playable_race.name,
                     gender: character.gender.name,
-                    raids: data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`],
-                    sort: (data.raids[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
+                    raids: data.raids?.[`${character.name.toLowerCase()}-${character.realm.slug}`],
+                    sort: (data.raids?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
                         instance.modes.forEach((mode: any) => {
                             mode.progress.encounters.forEach((encounter: any) => {
                                 totalKills += encounter.completed_count;
