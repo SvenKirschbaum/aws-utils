@@ -52,9 +52,9 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
         account.characters.filter((character: any) => character.level === MAX_LEVEL)
     ).flat();
 
-    let charactersRaidInfo;
+    let charactersRaidInfo = {};
     try {
-        const characterRaidsResponses = await Promise.all(
+        const characterRaidsResponses = await Promise.allSettled(
             maxLevelCharacters.map(async (character: any) => {
                 const raidResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/encounters/raids?namespace=profile-${region}&locale=en_US`, {
                     headers: {
@@ -63,11 +63,11 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
                 });
 
                 if(!raidResponse.ok) {
-                    logger.error(`Failed to fetch raid info for ${character.name}-${character.realm.slug}`, {
+                    logger.error(`Unexpected response status when fetching raid info for ${character.name}-${character.realm.slug}`, {
                         status: raidResponse.status,
                         text: await raidResponse.text(),
                     });
-                    throw new Error("Failed to fetch raid info");
+                    throw new Error("Failed to fetch raid info for ${character.name}-${character.realm.slug}");
                 }
 
                 const raidResponseData = await raidResponse.json();
@@ -81,7 +81,11 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
             })
         );
 
-        charactersRaidInfo = characterRaidsResponses.reduce((acc, character) => ({...acc, ...character}), {});
+        characterRaidsResponses.filter(res => res.status === "rejected").forEach((rejection) => {
+            logger.error("Partial failure when fetching raid info", rejection.reason as Error);
+        });
+
+        charactersRaidInfo = characterRaidsResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
     } catch (error) {
         logger.error("Failed to fetch raid info", error as Error);
     }
