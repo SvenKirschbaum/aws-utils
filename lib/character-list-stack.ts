@@ -207,6 +207,7 @@ export class CharacterListStack extends cdk.Stack {
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
                 'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+                'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response contains sensitive data
             }
         });
         secret.grantRead(authCallbackFunction);
@@ -227,6 +228,7 @@ export class CharacterListStack extends cdk.Stack {
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
                 'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+                'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
             }
         });
         secret.grantRead(listCharactersFunction);
