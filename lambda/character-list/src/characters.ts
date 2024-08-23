@@ -11,8 +11,8 @@ import httpContentNegotiation from "@middy/http-content-negotiation";
 import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
 
 const REGIONS = ["eu", "us", "kr", "tw"];
-const MAX_LEVEL = 70;
-const RELEVANT_EXPANSION = 503;
+const MAX_LEVEL = 80;
+const RELEVANT_EXPANSION = 514;
 
 const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionData): Promise<APIGatewayProxyResultV2> {
     const region = request.pathParameters?.region;

@@ -11,9 +11,7 @@ export const GENDERS = ['Female', 'Male'];
 export const RACES = ['Blood Elf', 'Dark Iron Dwarf', 'Dracthyr', 'Draenei', 'Dwarf', 'Earthen', 'Gnome', 'Goblin', 'Highmountain Tauren', 'Human', 'Kul Tiran', 'Lightforged Draenei', "Mag'har Orc", 'Mechagnome', 'Night Elf', 'Nightborne', 'Orc', 'Pandaren', 'Tauren', 'Troll', 'Undead', 'Void Elf', 'Vulpera', 'Worgen', 'Zandalari Troll'];
 
 export const RAID_ABBREVIATIONS: {[key: number]: string} = {
-    1200: 'VOTI',
-    1208: 'ATSC',
-    1207: 'ATDH',
+    // 1273: 'Nerub-ar Palace'
 };
 
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
