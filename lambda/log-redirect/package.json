@@ -16,7 +16,7 @@
     "luxon": "3.5.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.143",
+    "@types/aws-lambda": "8.10.145",
     "@types/http-errors": "2.0.4",
     "@types/luxon": "3.4.2",
     "typescript": "5.5.4"
