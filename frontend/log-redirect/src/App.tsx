@@ -93,7 +93,7 @@ function ReportList(props: {title: string, latestPath: string, reports: Report[]
                 <List>
                     {reports.map((report) => (
                         <ListItem key={report.code}>
-                            <Link href={REPORT_URL_PREFIX + report.code}>{report.title || '(No Report Title available )'}</Link>
+                            <Link target={"_blank"} href={REPORT_URL_PREFIX + report.code}>{report.title || '(No Report Title available )'}</Link>
                         </ListItem>
                     ))}
                 </List>
