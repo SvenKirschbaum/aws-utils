@@ -172,6 +172,12 @@ export class DNSStack extends Stack {
             name: 'ext-gw'
         });
 
+        new HostRecord(zone, 'FluxWebhookHome', {
+            zone,
+            host: 'gw-01-nue-nc',
+            name: 'flux-webhook.home'
+        });
+
     }
 
     private createKirschbaumCloudRecords(zone: IPublicHostedZone) {
