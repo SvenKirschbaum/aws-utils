@@ -168,13 +168,13 @@ export class DNSStack extends Stack {
     private createKirschbaumMeRecords(zone: IPublicHostedZone) {
         new HostRecord(zone, 'ExtGW', {
             zone,
-            host: 'gw-01-nue-nc',
+            host: 'gw-02-nue-nc',
             name: 'ext-gw'
         });
 
         new HostRecord(zone, 'FluxWebhookHome', {
             zone,
-            host: 'gw-01-nue-nc',
+            host: 'gw-02-nue-nc',
             name: 'flux-webhook.home'
         });
 
