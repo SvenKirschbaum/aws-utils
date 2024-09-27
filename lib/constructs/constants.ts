@@ -21,6 +21,10 @@ export const HOSTS: {[key: string]: HostProperties} = {
         V4: "188.68.49.21",
         V6: "2a03:4000:6:d0e1::1"
     },
+    'gw-02-nue-nc': {
+        V4: "194.13.83.74",
+        V6: "2a03:4000:43:254::1"
+    },
     // These are technically not Hostnames, but it is convenient to have them here
     'ns1': {
         V4: "205.251.197.240",
