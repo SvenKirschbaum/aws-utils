@@ -175,7 +175,7 @@ export class DNSStack extends Stack {
         new HostRecord(zone, 'FluxWebhookHome', {
             zone,
             host: 'gw-02-nue-nc',
-            name: 'flux-webhook.home'
+            name: '*.home'
         });
 
     }
