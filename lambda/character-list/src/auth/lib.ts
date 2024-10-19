@@ -67,7 +67,7 @@ export interface OAuthStartData {
 
 interface OAuthContext {
     code_verifier: string,
-    nonce?: string,
+    state: string,
 }
 
 export async function startOAuthAuthorization(): Promise<OAuthStartData> {
@@ -84,12 +84,12 @@ export async function startOAuthAuthorization(): Promise<OAuthStartData> {
     }
 
     if (!config.serverMetadata().supportsPKCE()) {
-        parameters.nonce = oauthClient.randomNonce()
+        parameters.state = oauthClient.randomState()
     }
 
     const context: OAuthContext = {
         code_verifier,
-        nonce: parameters.nonce,
+        state: parameters.state,
     }
     const contextString = await new jose.EncryptJWT(context as unknown as jose.JWTPayload)
         .setProtectedHeader({ alg: 'dir', enc: 'A256CBC-HS512' })
@@ -123,7 +123,7 @@ export async function finishOAuthAuthorization(requestURL: URL, clientContext: s
 
     let tokens = await oauthClient.authorizationCodeGrant(config, requestURL, {
         pkceCodeVerifier: context.code_verifier,
-        expectedNonce: context.nonce,
+        expectedState: context.state,
         idTokenExpected: true,
     });
 
