@@ -139,7 +139,7 @@ export async function finishOAuthAuthorization(requestQueryString: string, clien
         .setIssuedAt()
         .setIssuer(process.env.BASE_DOMAIN as string)
         .setAudience(process.env.BASE_DOMAIN as string)
-        .setExpirationTime(tokens.expires_in as number)
+        .setExpirationTime(`${tokens.expiresIn()}s`)
         .encrypt(await getSessionKey());
 
     return {
