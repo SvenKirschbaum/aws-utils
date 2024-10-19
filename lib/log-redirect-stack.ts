@@ -53,7 +53,7 @@ export class LogRedirectStack extends cdk.Stack {
 
     const raidFunction = new NodejsFunction(this, 'RaidFunction', {
       entry: 'lambda/log-redirect/src/raid.ts',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),
@@ -72,7 +72,7 @@ export class LogRedirectStack extends cdk.Stack {
 
     const mythFunction = new NodejsFunction(this, 'MythFunction', {
       entry: 'lambda/log-redirect/src/mythplus.ts',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),
@@ -91,7 +91,7 @@ export class LogRedirectStack extends cdk.Stack {
 
     const listFunction = new NodejsFunction(this, 'ListFunction', {
       entry: 'lambda/log-redirect/src/list.ts',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),
@@ -110,7 +110,7 @@ export class LogRedirectStack extends cdk.Stack {
 
     const authFunction = new NodejsFunction(this, 'AuthFunction', {
       entry: 'lambda/log-redirect/src/auth.ts',
-      runtime: Runtime.NODEJS_18_X,
+      runtime: Runtime.NODEJS_20_X,
       architecture: Architecture.ARM_64,
       logRetention: RetentionDays.THREE_DAYS,
       timeout: Duration.seconds(10),

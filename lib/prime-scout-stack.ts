@@ -71,7 +71,7 @@ export class PrimeScoutStack extends cdk.Stack {
 
         const scoutFunction = new NodejsFunction(this, 'ScoutFunction', {
             entry: 'lambda/prime-scout/src/scout.ts',
-            runtime: Runtime.NODEJS_18_X,
+            runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
             timeout: Duration.seconds(10),
