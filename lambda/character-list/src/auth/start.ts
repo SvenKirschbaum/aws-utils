@@ -6,24 +6,19 @@ import httpErrorHandlerMiddleware from "@middy/http-error-handler";
 import {logger, tracer} from "../util";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
-import {getOAuthClient} from "./lib";
-import { generators } from "openid-client";
+import {startOAuthAuthorization} from "./lib";
+
 
 const lambdaHandler = async function (_: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
-    const client = await getOAuthClient();
-    const state = generators.state();
-    const authorizationUrl = client.authorizationUrl({
-        scope: 'openid wow.profile',
-        state,
-    });
+    const authData = await startOAuthAuthorization();
 
     return {
         statusCode: 302,
         headers: {
-            Location: authorizationUrl,
+            Location: authData.clientRedirectURL.toString(),
         },
         cookies: [
-            `state=${state}; Secure; HttpOnly; SameSite=None; Path=/api/auth; Max-Age=600`,
+            `authContext=${authData.clientContext}; Secure; HttpOnly; SameSite=None; Path=/api/auth; Max-Age=3600`,
         ],
     }
 }
