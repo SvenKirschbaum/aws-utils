@@ -112,7 +112,7 @@ export interface OAuthSessionData {
 export interface SessionPayload {
     battleNet: oauthClient.TokenEndpointResponse & oauthClient.TokenEndpointResponseHelpers,
 }
-export async function finishOAuthAuthorization(requestURL: URL, clientContext: string): Promise<OAuthSessionData> {
+export async function finishOAuthAuthorization(requestQueryString: string, clientContext: string): Promise<OAuthSessionData> {
     const config = await getOAuthConfig();
 
     const { payload } = await jose.jwtDecrypt(clientContext, await getSessionKey(), {
@@ -121,11 +121,15 @@ export async function finishOAuthAuthorization(requestURL: URL, clientContext: s
     });
     const context = payload as unknown as OAuthContext;
 
-    let tokens = await oauthClient.authorizationCodeGrant(config, requestURL, {
-        pkceCodeVerifier: context.code_verifier,
-        expectedState: context.state,
-        idTokenExpected: true,
-    });
+    let tokens = await oauthClient.authorizationCodeGrant(
+        config,
+        new URL(`${OAUTH_REDIRECT_URL}?${requestQueryString}`),
+        {
+            pkceCodeVerifier: context.code_verifier,
+            expectedState: context.state,
+            idTokenExpected: true,
+        }
+    );
 
     const sessionPayload: SessionPayload = {
         battleNet: tokens,

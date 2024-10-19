@@ -16,8 +16,7 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2): Promise<
         body: 'Invalid authContext cookie',
     }
 
-    const requestURL = new URL(`https://${request.requestContext.domainName}${request.rawPath}?${request.rawQueryString}`);
-    const oAuthSessionData = await finishOAuthAuthorization(requestURL, clientContext[0]);
+    const oAuthSessionData = await finishOAuthAuthorization(request.rawQueryString, clientContext[0]);
 
     return {
         statusCode: 302,
