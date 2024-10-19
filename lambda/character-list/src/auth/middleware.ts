@@ -1,14 +1,8 @@
 import { createError } from '@middy/util'
-import {getSessionKey} from "./lib";
-import * as jose from "jose";
-import {TokenSet} from "openid-client";
+import {parseSession, SessionPayload} from "./lib";
 
 export interface SessionData {
     session: SessionPayload,
-}
-
-export interface SessionPayload {
-    battleNet: TokenSet,
 }
 
 export const sessionMiddleware = (opts = {}) => {
@@ -20,15 +14,8 @@ export const sessionMiddleware = (opts = {}) => {
                 throw createError(401, 'No session cookie');
             }
 
-            const secret = await getSessionKey()
-
             try {
-                const { payload} = await jose.jwtDecrypt(token[0] as string, secret, {
-                    issuer: process.env.BASE_DOMAIN as string,
-                    audience: process.env.BASE_DOMAIN as string,
-                });
-
-                request.event.session = payload as any as SessionPayload;
+                request.event.session = await parseSession(token[0]);
             } catch (e) {
                 console.log("Error decrypting token", e);
                 throw createError(401, 'Invalid session');
