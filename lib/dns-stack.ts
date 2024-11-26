@@ -154,6 +154,14 @@ export class DNSStack extends Stack {
             host: 'obs-01-vie-nc',
             name: '*.monitoring'
         });
+
+        new TxtRecord(zone, 'BlueSkyRecord', {
+            zone,
+            ttl: LONG_TTL,
+            recordName: '_atproto.fallobst22',
+            values: ['did=did:plc:toe6ckmva32ms4niq2tpoubd']
+        })
+
         Object.keys(DOMAINS).filter((domain) => domain !== 'elite12.de').forEach((domain) => {
             new TxtRecord(zone, `${domain}DmarcAllowReports`, {
                 zone,
@@ -177,7 +185,6 @@ export class DNSStack extends Stack {
             host: 'gw-02-nue-nc',
             name: '*.home'
         });
-
     }
 
     private createKirschbaumCloudRecords(zone: IPublicHostedZone) {
