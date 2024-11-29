@@ -11,11 +11,11 @@
     "@middy/http-response-serializer": "5.5.1",
     "@middy/error-logger": "5.5.1",
     "@middy/http-content-negotiation": "5.5.1",
-    "openid-client": "6.1.4",
+    "openid-client": "6.1.6",
     "node-jose": "2.2.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.145",
+    "@types/aws-lambda": "8.10.146",
     "@types/http-errors": "2.0.4",
     "typescript": "5.7.2"
   }
