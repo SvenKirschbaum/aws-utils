@@ -37,6 +37,7 @@ import {DateTime} from "luxon";
 const router = createBrowserRouter([
     {
         Component: LoadingWrapper,
+        hydrateFallbackElement: <LoadingIndicator />,
         children: [
             {
                 path: '/:region?',
@@ -86,9 +87,6 @@ function App() {
             }}>
                 <RouterProvider
                     router={router}
-                    fallbackElement={
-                        <LoadingIndicator />
-                    }
                 />
             </Container>
         </ThemeProvider>
