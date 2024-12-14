@@ -10,7 +10,7 @@
     "@middy/http-response-serializer": "5.5.1",
     "@middy/error-logger": "5.5.1",
     "@middy/http-content-negotiation": "5.5.1",
-    "@aws-sdk/client-secrets-manager": "3.699.0",
+    "@aws-sdk/client-secrets-manager": "3.712.0",
     "graphql-request": "7.1.2",
     "jwt-decode": "4.0.0",
     "luxon": "3.5.0"
