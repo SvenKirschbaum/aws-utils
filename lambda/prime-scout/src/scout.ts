@@ -17,8 +17,8 @@ import { JSDOM } from 'jsdom'
 const tracer = new Tracer();
 const logger = new Logger();
 
-const teamRegex = /^https:\/\/www\.primeleague\.gg\/leagues(?:[\d\w\-\/]+)?\/teams\/\d+-.+$/;
-const matchRegex = /^https:\/\/www\.primeleague\.gg\/leagues\/matches\/(\d+)-.+$/;
+const teamRegex = /^https:\/\/www\.primeleague\.gg\/(?:\w{2}\/)?leagues(?:[\d\w\-\/]+)?\/teams\/\d+-.+$/;
+const matchRegex = /^https:\/\/www\.primeleague\.gg\/(?:\w{2}\/)?leagues\/matches\/(\d+)-.+$/;
 
 const playerBlacklist = ["Kill Like A Sir#WWE", "ĐamnTaco#303", "Brand#WWE", "Greedy Hero#WWE", "Joghurt#EUW"];
 
