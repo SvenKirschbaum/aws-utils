@@ -50,7 +50,7 @@ async function getOAuthConfig() {
     const config = await oauthClient.discovery(
         new URL('https://oauth.battle.net/'),
         credentials.client_id,
-        credentials.client_secret
+        credentials.client_secret,
     );
 
     __oauth_config = config;
@@ -68,6 +68,7 @@ export interface OAuthStartData {
 interface OAuthContext {
     code_verifier: string,
     state: string,
+    nonce: string,
 }
 
 export async function startOAuthAuthorization(): Promise<OAuthStartData> {
@@ -75,12 +76,14 @@ export async function startOAuthAuthorization(): Promise<OAuthStartData> {
 
     let code_verifier = oauthClient.randomPKCECodeVerifier()
     let code_challenge = await oauthClient.calculatePKCECodeChallenge(code_verifier)
+    let nonce = oauthClient.randomNonce();
 
     let parameters: Record<string, string> = {
         redirect_uri: OAUTH_REDIRECT_URL,
         scope: OAUTH_SCOPES,
         code_challenge,
         code_challenge_method: OAUTH_CODE_CHALLENGE_METHOD,
+        nonce
     }
 
     if (!config.serverMetadata().supportsPKCE()) {
@@ -90,6 +93,7 @@ export async function startOAuthAuthorization(): Promise<OAuthStartData> {
     const context: OAuthContext = {
         code_verifier,
         state: parameters.state,
+        nonce,
     }
     const contextString = await new jose.EncryptJWT(context as unknown as jose.JWTPayload)
         .setProtectedHeader({ alg: 'dir', enc: 'A256CBC-HS512' })
@@ -128,6 +132,7 @@ export async function finishOAuthAuthorization(requestQueryString: string, clien
             pkceCodeVerifier: context.code_verifier,
             expectedState: context.state,
             idTokenExpected: true,
+            expectedNonce: context.nonce,
         }
     );
 
