@@ -145,7 +145,7 @@ export class PrimeScoutStack extends cdk.Stack {
             destinationBucket: bucket,
             exclude: ['index.html'],
             sources: [
-                Source.asset('./frontend/prime-scout/build', {
+                Source.asset('./frontend/prime-scout/dist', {
                     // Exclude files from bundling
                     exclude: ['*.map', 'index.html'],
                 }),
@@ -162,7 +162,7 @@ export class PrimeScoutStack extends cdk.Stack {
             exclude: ['*'],
             include: ['index.html'],
             sources: [
-                Source.asset('./frontend/prime-scout/build', {
+                Source.asset('./frontend/prime-scout/dist', {
                     // Bundle only index.html
                     exclude: ['*', '!index.html'],
                 })
