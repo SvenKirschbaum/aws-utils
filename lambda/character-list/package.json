@@ -11,7 +11,7 @@
     "@middy/http-response-serializer": "6.1.5",
     "@middy/error-logger": "6.1.5",
     "@middy/http-content-negotiation": "6.1.5",
-    "openid-client": "6.3.3",
+    "openid-client": "6.3.4",
     "node-jose": "2.2.0"
   },
   "devDependencies": {
