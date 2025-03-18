@@ -15,6 +15,8 @@ export const RAID_ABBREVIATIONS: {[key: number]: string} = {
     1296: 'LoU'
 };
 
+export const LATEST_RAID = 1296;
+
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
     'LFR': 'LFR',
     'NORMAL': 'NHC',

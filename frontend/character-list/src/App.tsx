@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from 'react'
+import {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import './App.css'
 import {Outlet, useLoaderData, useNavigate, useNavigation, useParams} from "react-router";
 import {
@@ -6,8 +6,8 @@ import {
     CircularProgress,
     Container,
     createTheme,
-    CssBaseline, MenuItem,
-    Select, Stack,
+    CssBaseline, FormControlLabel, MenuItem,
+    Select, Stack, Switch,
     ThemeProvider, Tooltip,
     useMediaQuery
 } from "@mui/material";
@@ -26,7 +26,7 @@ import {ErrorBoundary} from "react-error-boundary";
 import {
     CLASSES,
     DIFFUCULTY_ABBREVIATIONS,
-    FACTIONS, GENDERS,
+    FACTIONS, GENDERS, LATEST_RAID,
     RACES,
     RAID_ABBREVIATIONS,
     REGIONS,
@@ -63,6 +63,13 @@ const router = createBrowserRouter([
         ]
     },
 ])
+
+declare interface SettingsContextType {
+    showOnlyLatestRaid: boolean,
+    setShowOnlyLatestRaid: (show: boolean) => void
+}
+
+const SettingsContext = createContext(undefined as unknown as SettingsContextType);
 
 function App() {
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)') || true; // Light mode doesn't work well with class colors.
@@ -112,6 +119,7 @@ function CharacterList() {
     } = useLoaderData() as any;
     const apiRef = useGridApiRef();
     const [key, setKey] = useState(0);
+    const [showOnlyLatestRaid, setShowOnlyLatestRaid] = useState(true);
 
     //Restore saved state
     useEffect(() => {
@@ -169,40 +177,45 @@ function CharacterList() {
     }, [data]);
 
     return (
-        <DataGrid
-            key={key}
-            apiRef={apiRef}
-            sx={{
-                '& .MuiDataGrid-cell': {
-                    padding: '0.5em',
-                    textAlign: 'center',
-                },
-            }}
-            disableColumnSelector={true}
-            rows={rows}
-            columns={columns}
-            initialState={{
-                pagination: { paginationModel: { pageSize: 15 } }
-            }}
-            autosizeOnMount={true}
-            autosizeOptions={{
-                expand: true,
-                includeHeaders: false,
-                includeOutliers: true
-            }}
-            autoPageSize={false}
-            autoHeight={true}
-            getRowHeight={() => 'auto'}
-            pageSizeOptions={[15]}
-            slots={{
-                footer: Footer
-            }}
-            slotProps={{
-                footer: {
-                    setKey
-                } as any
-            }}
-        />
+        <SettingsContext value={{
+            showOnlyLatestRaid,
+            setShowOnlyLatestRaid
+        }}>
+            <DataGrid
+                key={key}
+                apiRef={apiRef}
+                sx={{
+                    '& .MuiDataGrid-cell': {
+                        padding: '0.5em',
+                        textAlign: 'center',
+                    },
+                }}
+                disableColumnSelector={true}
+                rows={rows}
+                columns={columns}
+                initialState={{
+                    pagination: { paginationModel: { pageSize: 15 } }
+                }}
+                autosizeOnMount={true}
+                autosizeOptions={{
+                    expand: true,
+                    includeHeaders: false,
+                    includeOutliers: true
+                }}
+                autoPageSize={false}
+                autoHeight={true}
+                getRowHeight={() => 'auto'}
+                pageSizeOptions={[15]}
+                slots={{
+                    footer: Footer
+                }}
+                slotProps={{
+                    footer: {
+                        setKey,
+                    } as any
+                }}
+            />
+        </SettingsContext>
     );
 }
 
@@ -215,13 +228,22 @@ function RaidStatusWrapper(props: any) {
 }
 
 function RaidStatus(props: {value: any}) {
+    const settings = useContext(SettingsContext);
+
     if(!props.value) {
         return "";
+
     }
 
     return (
         <div className={'raid-status'}>
-            {props.value.map((instance: any) => <InstanceStatus key={instance.instance.id} {...instance} />)}
+            {
+                props.value.filter(
+                    (instance: any) => instance.instance.id === LATEST_RAID || !settings.showOnlyLatestRaid
+                ).map(
+                    (instance: any) => <InstanceStatus key={instance.instance.id} {...instance} />
+                )
+            }
         </div>
     );
 }
@@ -274,6 +296,7 @@ function RaidTooltip(props: any) {
 function Footer(props: any) {
     const {region} = useParams();
     const navigate = useNavigate();
+    const settings = useContext(SettingsContext);
 
     const onChange = (event: any) => {
         navigate(`/${event.target.value}`);
@@ -295,6 +318,12 @@ function Footer(props: any) {
                 <Button className="reset-button" variant={"outlined"} onClick={resetState}>
                     Reset Sorting and Filters
                 </Button>
+                <FormControlLabel
+                    value={false}
+                    control={<Switch color="primary" checked={settings.showOnlyLatestRaid} onChange={(e) => settings.setShowOnlyLatestRaid(e.target.checked)} />}
+                    label="Show only latest Raid"
+                    labelPlacement="end"
+                />
                 <GridFooter sx={{
                     border: 'none', // To delete double border.
                 }} >
