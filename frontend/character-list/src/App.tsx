@@ -105,6 +105,9 @@ function App() {
     );
 }
 
+// Increment this number to discard all existing saved grid configurations
+const GRID_CONFIG_VERSION = 2;
+
 const columns: GridColDef[] = [
     { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
     { field: 'level', headerName: 'Level', headerAlign: 'center', type: 'number'},
@@ -152,16 +155,21 @@ function CharacterList() {
 
     //Restore saved state
     useEffect(() => {
-        const storedState = localStorage.getItem('gridState');
+        const storedStateString = localStorage.getItem('gridState');
+        if(storedStateString) {
+            const storedState = JSON.parse(storedStateString);
 
-        if(storedState) {
-            apiRef.current.restoreState(JSON.parse(storedState));
+            if(storedState.version !== GRID_CONFIG_VERSION) {
+                localStorage.removeItem('gridState');
+            } else {
+                apiRef.current.restoreState(storedState);
+            }
         }
     }, []);
 
     //Save state on unload
     const saveState = useCallback(() => {
-        localStorage.setItem('gridState', JSON.stringify(apiRef.current.exportState()));
+        localStorage.setItem('gridState', JSON.stringify({...apiRef.current.exportState(), version: GRID_CONFIG_VERSION}));
     }, []);
 
     useEffect(() => {
