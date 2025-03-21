@@ -4,17 +4,27 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
 import {logger, tracer} from "./util";
-import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
 import {SessionData, sessionMiddleware} from "./auth/middleware";
 import httpContentNegotiation from "@middy/http-content-negotiation";
 import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
+import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 
 const REGIONS = ["eu", "us", "kr", "tw"];
 const MAX_LEVEL = 80;
 const RELEVANT_EXPANSION = 514;
 
-const fetchCharacterRaids = async (character: any, region: string, battleNetToken: string) => {
+const fetchForEach = async (characters: any[], type: string, fetchFunction: (character: any) => Promise<any>) => {
+    const responses = await Promise.allSettled(characters.map(c => fetchFunction(c)));
+
+    responses.filter(res => res.status === "rejected").forEach((rejection) => {
+        logger.error(`Partial failure when fetching ${type} data`, rejection.reason as Error);
+    });
+
+    return responses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
+}
+
+const fetchCharacterRaids = async (character: any, region: string, battleNetToken: string)  => {
     const raidResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/encounters/raids?namespace=profile-${region}&locale=en_US`, {
         headers: {
             Authorization: `Bearer ${battleNetToken}`,
@@ -79,7 +89,8 @@ const fetchCharacterMythicKeystoneProfile = async (character: any, region: strin
     return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: mythicKeystoneProfileResponseData};
 }
 
-const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionData): Promise<APIGatewayProxyResultV2> {
+
+const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Promise<APIGatewayProxyResultV2> => {
     const region = request.pathParameters?.region;
 
     if(!region || !REGIONS.includes(region)) return {
@@ -117,48 +128,16 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
         account.characters.filter((character: any) => character.level === MAX_LEVEL)
     ).flat();
 
-    let charactersRaidInfo = {};
-    let charactersProfileInfo = {};
-    let charactersMythicKeystoneInfo = {};
-    try {
-        const characterRaidsResponsesPromise = Promise.allSettled(
-            maxLevelCharacters.map((c: any) => fetchCharacterRaids(c, region, request.session.battleNet.access_token))
-        );
+    const raidsPromise = fetchForEach(maxLevelCharacters, 'raids', (character) => fetchCharacterRaids(character, region, request.session.battleNet.access_token));
+    const profilePromise = fetchForEach(maxLevelCharacters, 'character profile', (character) => fetchCharacterProfile(character, region, request.session.battleNet.access_token));
+    const mythicKeystonePromise = fetchForEach(maxLevelCharacters, 'mythic keystone profile', (character) => fetchCharacterMythicKeystoneProfile(character, region, request.session.battleNet.access_token));
 
-        const characterProfileResponsesPromise = Promise.allSettled(
-            maxLevelCharacters.map((c: any) => fetchCharacterProfile(c, region, request.session.battleNet.access_token))
-        );
-        const characterMythicKeystoneProfileResponsesPromise = Promise.allSettled(
-            maxLevelCharacters.map((c: any) => fetchCharacterMythicKeystoneProfile(c, region, request.session.battleNet.access_token))
-        );
-
-        //Wait for all promises to resolve
-        await Promise.allSettled([
-            characterRaidsResponsesPromise,
-            characterProfileResponsesPromise,
-            characterMythicKeystoneProfileResponsesPromise
-        ]);
-
-        const characterRaidsResponses = await characterRaidsResponsesPromise;
-        const characterProfileResponses = await characterProfileResponsesPromise;
-        const characterMythicKeystoneProfileResponses = await characterMythicKeystoneProfileResponsesPromise;
-
-        [
-            [characterRaidsResponses, "raid"] as [PromiseSettledResult<any>[], string],
-            [characterProfileResponses, "profile"] as [PromiseSettledResult<any>[], string],
-            [characterMythicKeystoneProfileResponses, "mythic keystone profile"] as [PromiseSettledResult<any>[], string],
-        ].forEach(([responses, type]) => {
-            responses.filter(res => res.status === "rejected").forEach((rejection) => {
-                logger.error(`Partial failure when fetching ${type} data`, rejection.reason as Error);
-            });
-        });
-
-        charactersRaidInfo = characterRaidsResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
-        charactersProfileInfo = characterProfileResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
-        charactersMythicKeystoneInfo = characterMythicKeystoneProfileResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
-    } catch (error) {
-        logger.error("Failed to fetch raid info", error as Error);
-    }
+    //Wait for all promises to resolve
+    await Promise.allSettled([
+        raidsPromise,
+        profilePromise,
+        mythicKeystonePromise
+    ]);
 
     return {
         statusCode: 200,
@@ -167,12 +146,13 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
         },
         body: {
             profile: profileData,
-            raids: charactersRaidInfo,
-            characterProfile: charactersProfileInfo,
-            mythicKeystoneProfile: charactersMythicKeystoneInfo,
+            raids: await raidsPromise,
+            characterProfile: await profilePromise,
+            mythicKeystoneProfile: await mythicKeystonePromise,
         } as any,
     }
 }
+
 
 export const handler = middy(lambdaHandler)
     .use(captureLambdaHandler(tracer))
