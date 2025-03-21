@@ -109,3 +109,8 @@
 .reset-button {
     margin: 1em!important;
 }
+
+.link-logo {
+    width: 1em;
+    height: 1em;
+}

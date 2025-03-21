@@ -2,11 +2,12 @@ import {createContext, useCallback, useContext, useEffect, useMemo, useState} fr
 import './App.css'
 import {Outlet, useLoaderData, useNavigate, useNavigation, useParams} from "react-router";
 import {
+    Box,
     Button,
     CircularProgress,
     Container,
     createTheme,
-    CssBaseline, FormControlLabel, MenuItem,
+    CssBaseline, FormControlLabel, Link, MenuItem,
     Select, Stack, Switch,
     ThemeProvider, Tooltip,
     useMediaQuery
@@ -21,6 +22,9 @@ import {
 } from "@mui/x-data-grid";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import RaiderIOIcon from './assets/raider-io-icon.svg?react'
+import WoWIcon from './assets/wow-icon.svg?react'
+import wclLogoUrl from './assets/wcl-icon.png'
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
 import {ErrorBoundary} from "react-error-boundary";
 import {
@@ -29,10 +33,11 @@ import {
     FACTIONS, GENDERS, LATEST_RAID,
     RACES,
     RAID_ABBREVIATIONS,
-    REGIONS,
+    REGIONS, SPECS,
     WEEKLY_RESET
 } from "./constants.tsx";
 import {DateTime} from "luxon";
+import {GridInitialStateCommunity} from "@mui/x-data-grid/models/gridStateCommunity";
 
 const router = createBrowserRouter([
     {
@@ -103,19 +108,43 @@ function App() {
 const columns: GridColDef[] = [
     { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
     { field: 'level', headerName: 'Level', headerAlign: 'center', type: 'number'},
+    { field: 'guild', headerName: 'Guild', headerAlign: 'center', cellClassName: (params) => `color-faction-${params.row.guildFactionType}`},
     { field: 'className', headerName: 'Class', headerAlign: 'center', type: 'singleSelect', valueOptions: CLASSES, cellClassName: (params) => `color-class-${params.row.classId}`},
+    { field: 'equippedItemLevel', headerName: 'Item Level', headerAlign: 'center', type: 'number' },
+    { field: 'averageItemLevel', headerName: 'Item Level (Average)', headerAlign: 'center', type: 'number' },
+    { field: 'mythicRating', headerName: 'M+ Rating', headerAlign: 'center', type: 'number', renderCell: (params) => <MythicRating rating={params.row.mythicRating} color={params.row.mythicRatingColor}></MythicRating>},
     { field: 'realm', headerName: 'Realm', headerAlign: 'center' },
     { field: 'factionName', headerName: 'Faction', headerAlign: 'center', type: 'singleSelect', valueOptions: FACTIONS, cellClassName: (params) => `color-faction-${params.row.factionType}`},
     { field: 'race', headerName: 'Race', headerAlign: 'center', type: 'singleSelect', valueOptions: RACES},
     { field: 'gender', headerName: 'Gender', headerAlign: 'center', type: 'singleSelect', valueOptions: GENDERS},
     { field: 'account', headerName: 'Account', headerAlign: 'center', type: 'number'},
+    { field: 'spec', headerName: 'Spec', headerAlign: 'center', type: 'singleSelect', valueOptions: SPECS},
+    { field: 'achievementPoints', headerName: 'Achievement Points', headerAlign: 'center', type: 'number'},
+    { field: 'lastLogin', headerName: 'Last Login', headerAlign: 'center', type: 'dateTime', valueGetter: (v) => v && new Date(v)},
     { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
+    { field: 'false', headerName: 'Links', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <CharacterLinks name={params.row.name.toLowerCase()} realmSlug={params.row.realmSlug} />},
 ];
+
+const defaultState: GridInitialStateCommunity = {
+    pagination: { paginationModel: { pageSize: 15 } },
+    columns: {
+        columnVisibilityModel: {
+            account: false,
+            gender: false,
+            spec: false,
+            achievementPoints: false,
+            lastLogin: false,
+            averageItemLevel: false
+        }
+    },
+}
 
 function CharacterList() {
     const data: {
         profile: any,
-        raids: {[char: string]: any[]}
+        raids: {[char: string]: any[]},
+        characterProfile: {[char: string]: any},
+        mythicKeystoneProfile: {[char: string]: any},
     } = useLoaderData() as any;
     const apiRef = useGridApiRef();
     const [key, setKey] = useState(0);
@@ -134,6 +163,7 @@ function CharacterList() {
     const saveState = useCallback(() => {
         localStorage.setItem('gridState', JSON.stringify(apiRef.current.exportState()));
     }, []);
+
     useEffect(() => {
         window.addEventListener('beforeunload', saveState);
         return () => {
@@ -147,6 +177,7 @@ function CharacterList() {
         data.profile.wow_accounts.forEach((account: any, accountIndex: number) => {
             account.characters.forEach((character: any) => {
                 r.push({
+                    // Account profile data
                     id: character.id,
                     account: accountIndex+1,
                     name: character.name,
@@ -154,19 +185,26 @@ function CharacterList() {
                     classId: character.playable_class.id,
                     className: character.playable_class.name,
                     realm: character.realm.name,
+                    realmSlug: character.realm.slug,
                     factionName: character.faction.name,
                     factionType: character.faction.type,
                     race: character.playable_race.name,
                     gender: character.gender.name,
+                    // Raid Encounter data
                     raids: data.raids?.[`${character.name.toLowerCase()}-${character.realm.slug}`],
-                    sort: (data.raids?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.reduce((totalKills: any, instance: any) => {
-                        instance.modes.forEach((mode: any) => {
-                            mode.progress.encounters.forEach((encounter: any) => {
-                                totalKills += encounter.completed_count;
-                            });
-                        });
-                        return totalKills;
-                    }, 0) || 0) + character.level*1000
+                    // Character Profile data
+                    spec: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.active_spec.name,
+                    guild: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.guild?.name,
+                    guildFactionType: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.guild?.faction?.type,
+                    achievementPoints: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.achievement_points,
+                    lastLogin: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.last_login_timestamp,
+                    equippedItemLevel: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.equipped_item_level,
+                    averageItemLevel: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.average_item_level,
+                    // Mythic Keystone Profile data
+                    mythicRating: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.rating,
+                    mythicRatingColor: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.color,
+                    // Calculated Data
+                    sort: character.level*10000 + (data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.equipped_item_level || 0)
                 });
             });
         });
@@ -190,12 +228,10 @@ function CharacterList() {
                         textAlign: 'center',
                     },
                 }}
-                disableColumnSelector={true}
+                disableColumnSelector={false}
                 rows={rows}
                 columns={columns}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 15 } }
-                }}
+                initialState={defaultState}
                 autosizeOnMount={true}
                 autosizeOptions={{
                     expand: true,
@@ -316,7 +352,7 @@ function Footer(props: any) {
                     ))}
                 </Select>
                 <Button className="reset-button" variant={"outlined"} onClick={resetState}>
-                    Reset Sorting and Filters
+                    Reset Grid Configuration
                 </Button>
                 <FormControlLabel
                     value={false}
@@ -348,6 +384,27 @@ function LoadingIndicator() {
         <div className="loading-indicator">
             <CircularProgress size="10rem"/>
         </div>
+    );
+}
+
+function MythicRating(props: {rating: number, color: {r: number, g: number, b: number}}) {
+    if(!props.rating) return null;
+
+    return (
+        <div style={{color: `rgb(${props.color.r},${props.color.g},${props.color.b})`}}>
+            {Math.round(props.rating)}
+        </div>
+    );
+}
+
+function CharacterLinks(props: {name: string, realmSlug: string}) {
+    const routeParams = useParams() as {region: string};
+    return (
+        <Box display={"flex"} justifyContent={"center"} alignItems={"center"} height={"100%"} gap={"0.5rem"}>
+            <Link display={"contents"} href={`https://worldofwarcraft.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><WoWIcon className={"link-logo"} /></Link>
+            <Link display={"contents"} href={`https://raider.io/characters/${routeParams.region}/${props.realmSlug}/${props.name}`}><RaiderIOIcon className={"link-logo"} /></Link>
+            <Link display={"contents"} href={`https://www.warcraftlogs.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><img className={"link-logo"} alt={"WCL"} src={wclLogoUrl} /></Link>
+        </Box>
     );
 }
 
