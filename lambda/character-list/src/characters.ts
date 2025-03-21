@@ -14,6 +14,71 @@ const REGIONS = ["eu", "us", "kr", "tw"];
 const MAX_LEVEL = 80;
 const RELEVANT_EXPANSION = 514;
 
+const fetchCharacterRaids = async (character: any, region: string, battleNetToken: string) => {
+    const raidResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/encounters/raids?namespace=profile-${region}&locale=en_US`, {
+        headers: {
+            Authorization: `Bearer ${battleNetToken}`,
+        }
+    });
+
+    if(!raidResponse.ok) {
+        logger.error(`Unexpected response status when fetching raid info for ${character.name}-${character.realm.slug}`, {
+            status: raidResponse.status,
+            text: await raidResponse.text(),
+        });
+        throw new Error(`Failed to fetch raid info for ${character.name}-${character.realm.slug}`);
+    }
+
+    const raidResponseData = await raidResponse.json();
+
+    return (
+        (raidResponseData.expansions || [])
+            .filter((expansion: any) => expansion.expansion.id === RELEVANT_EXPANSION)
+            .map((expansion: any) => ({[`${character.name.toLowerCase()}-${character.realm.slug}`]: expansion.instances}))
+            .shift()
+    )
+}
+
+const fetchCharacterProfile = async (character: any, region: string, battleNetToken: string) => {
+    const profileResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}?namespace=profile-${region}&locale=en_US`, {
+        headers: {
+            Authorization: `Bearer ${battleNetToken}`,
+        }
+    });
+
+    if(!profileResponse.ok) {
+        logger.error(`Unexpected response status when fetching profile info for ${character.name}-${character.realm.slug}`, {
+            status: profileResponse.status,
+            text: await profileResponse.text(),
+        });
+        throw new Error(`Failed to fetch profile info for ${character.name}-${character.realm.slug}`);
+    }
+
+    const profileResponseData = await profileResponse.json();
+
+    return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: profileResponseData};
+}
+
+const fetchCharacterMythicKeystoneProfile = async (character: any, region: string, battleNetToken: string) => {
+    const mythicKeystoneProfileResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-${region}&locale=en_US`, {
+        headers: {
+            Authorization: `Bearer ${battleNetToken}`,
+        }
+    });
+
+    if(!mythicKeystoneProfileResponse.ok) {
+        logger.error(`Unexpected response status when fetching mythic keystone profile info for ${character.name}-${character.realm.slug}`, {
+            status: mythicKeystoneProfileResponse.status,
+            text: await mythicKeystoneProfileResponse.text(),
+        });
+        throw new Error(`Failed to fetch mythic keystone profile profile info for ${character.name}-${character.realm.slug}`);
+    }
+
+    const mythicKeystoneProfileResponseData = await mythicKeystoneProfileResponse.json();
+
+    return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: mythicKeystoneProfileResponseData};
+}
+
 const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionData): Promise<APIGatewayProxyResultV2> {
     const region = request.pathParameters?.region;
 
@@ -53,39 +118,44 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
     ).flat();
 
     let charactersRaidInfo = {};
+    let charactersProfileInfo = {};
+    let charactersMythicKeystoneInfo = {};
     try {
-        const characterRaidsResponses = await Promise.allSettled(
-            maxLevelCharacters.map(async (character: any) => {
-                const raidResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/encounters/raids?namespace=profile-${region}&locale=en_US`, {
-                    headers: {
-                        Authorization: `Bearer ${request.session.battleNet.access_token}`,
-                    }
-                });
-
-                if(!raidResponse.ok) {
-                    logger.error(`Unexpected response status when fetching raid info for ${character.name}-${character.realm.slug}`, {
-                        status: raidResponse.status,
-                        text: await raidResponse.text(),
-                    });
-                    throw new Error("Failed to fetch raid info for ${character.name}-${character.realm.slug}");
-                }
-
-                const raidResponseData = await raidResponse.json();
-
-                return (
-                    (raidResponseData.expansions || [])
-                        .filter((expansion: any) => expansion.expansion.id === RELEVANT_EXPANSION)
-                        .map((expansion: any) => ({[`${character.name.toLowerCase()}-${character.realm.slug}`]: expansion.instances}))
-                        .shift()
-                )
-            })
+        const characterRaidsResponsesPromise = Promise.allSettled(
+            maxLevelCharacters.map((c: any) => fetchCharacterRaids(c, region, request.session.battleNet.access_token))
         );
 
-        characterRaidsResponses.filter(res => res.status === "rejected").forEach((rejection) => {
-            logger.error("Partial failure when fetching raid info", rejection.reason as Error);
+        const characterProfileResponsesPromise = Promise.allSettled(
+            maxLevelCharacters.map((c: any) => fetchCharacterProfile(c, region, request.session.battleNet.access_token))
+        );
+        const characterMythicKeystoneProfileResponsesPromise = Promise.allSettled(
+            maxLevelCharacters.map((c: any) => fetchCharacterMythicKeystoneProfile(c, region, request.session.battleNet.access_token))
+        );
+
+        //Wait for all promises to resolve
+        await Promise.allSettled([
+            characterRaidsResponsesPromise,
+            characterProfileResponsesPromise,
+            characterMythicKeystoneProfileResponsesPromise
+        ]);
+
+        const characterRaidsResponses = await characterRaidsResponsesPromise;
+        const characterProfileResponses = await characterProfileResponsesPromise;
+        const characterMythicKeystoneProfileResponses = await characterMythicKeystoneProfileResponsesPromise;
+
+        [
+            [characterRaidsResponses, "raid"] as [PromiseSettledResult<any>[], string],
+            [characterProfileResponses, "profile"] as [PromiseSettledResult<any>[], string],
+            [characterMythicKeystoneProfileResponses, "mythic keystone profile"] as [PromiseSettledResult<any>[], string],
+        ].forEach(([responses, type]) => {
+            responses.filter(res => res.status === "rejected").forEach((rejection) => {
+                logger.error(`Partial failure when fetching ${type} data`, rejection.reason as Error);
+            });
         });
 
         charactersRaidInfo = characterRaidsResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
+        charactersProfileInfo = characterProfileResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
+        charactersMythicKeystoneInfo = characterMythicKeystoneProfileResponses.filter(res => res.status === "fulfilled").reduce((acc, character) => ({...acc, ...character.value}), {});
     } catch (error) {
         logger.error("Failed to fetch raid info", error as Error);
     }
@@ -98,6 +168,8 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2 & SessionD
         body: {
             profile: profileData,
             raids: charactersRaidInfo,
+            characterProfile: charactersProfileInfo,
+            mythicKeystoneProfile: charactersMythicKeystoneInfo,
         } as any,
     }
 }
