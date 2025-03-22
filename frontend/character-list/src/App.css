@@ -70,6 +70,34 @@
     color: #FF4545;
 }
 
+.color-item-Poor {
+    color: #9d9d9d;
+}
+.color-item-Common {
+    color: #ffffff;
+}
+.color-item-Uncommon {
+    color: #1eff00;
+}
+.color-item-Rare {
+    color: #0070dd;
+}
+.color-item-Epic {
+    color: #a335ee;
+}
+.color-item-Legendary {
+    color: #ff8000;
+}
+.color-item-Artifact {
+    color: #e6cc80;
+}
+.color-item-Heirloom {
+    color: #00ccff;
+}
+.color-item-WoW-Token {
+    color: #00ccff;
+}
+
 .raid-status {
     display: flex;
     flex-direction: column;
@@ -96,6 +124,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    column-gap: 0.2rem;
 }
 
 .encounter-done {
@@ -113,4 +142,14 @@
 .link-logo {
     width: 1em;
     height: 1em;
+}
+
+.mplus-status {
+    display: flex;
+    justify-content: center;
+    gap: 0.2rem;
+}
+
+.mplus-status > * {
+    min-width: 2ch;
 }

@@ -106,7 +106,7 @@ function App() {
 }
 
 // Increment this number to discard all existing saved grid configurations
-const GRID_CONFIG_VERSION = 2;
+const GRID_CONFIG_VERSION = 3;
 
 const columns: GridColDef[] = [
     { field: 'name', headerName: 'Name', headerAlign: 'center', cellClassName: (params) => `color-class-${params.row.classId}`},
@@ -124,7 +124,8 @@ const columns: GridColDef[] = [
     { field: 'spec', headerName: 'Spec', headerAlign: 'center', type: 'singleSelect', valueOptions: SPECS},
     { field: 'achievementPoints', headerName: 'Achievement Points', headerAlign: 'center', type: 'number'},
     { field: 'lastLogin', headerName: 'Last Login', headerAlign: 'center', type: 'dateTime', valueGetter: (v) => v && new Date(v)},
-    { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', renderCell: (params) => <RaidStatusWrapper {...params} />},
+    { field: 'mythicPlusHighestRuns', headerName: 'M+ Vault', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <MPlusStatusWrapper runs={params.value} />},
+    { field: 'raids', headerName: 'Raid IDs', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <RaidStatusWrapper {...params} />},
     { field: 'false', headerName: 'Links', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <CharacterLinks name={params.row.name.toLowerCase()} realmSlug={params.row.realmSlug} />},
 ];
 
@@ -148,6 +149,7 @@ function CharacterList() {
         raids: {[char: string]: any[]},
         characterProfile: {[char: string]: any},
         mythicKeystoneProfile: {[char: string]: any},
+        raiderIOProfile: {[char: string]: any},
     } = useLoaderData() as any;
     const apiRef = useGridApiRef();
     const [key, setKey] = useState(0);
@@ -211,6 +213,8 @@ function CharacterList() {
                     // Mythic Keystone Profile data
                     mythicRating: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.rating,
                     mythicRatingColor: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.color,
+                    // RaiderIO Profile data
+                    mythicPlusHighestRuns: data.raiderIOProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.mythic_plus_weekly_highest_level_runs,
                     // Calculated Data
                     sort: character.level*10000 + (data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.equipped_item_level || 0)
                 });
@@ -331,6 +335,69 @@ function RaidTooltip(props: any) {
                 <div className={"encounter"} key={encounter.name}>
                     <div>{encounter.name}</div>
                     <>{encounter.done ? <CheckIcon className={"encounter-done"} />: <CloseIcon className={"encounter-not-done"} />}</>
+                </div>
+            )}
+        </div>
+    );
+}
+
+interface RIOProps {
+    runs: MPlusRun[]
+}
+
+interface MPlusRun {
+    mythic_level: number
+    dungeon: string
+    short_name: string
+}
+
+function MPlusStatusWrapper(props: RIOProps) {
+    return (
+        <ErrorBoundary fallback={<span>Error</span>}>
+            <MPlusStatus {...props} />
+        </ErrorBoundary>
+    )
+}
+
+const mPlusLevelToVariant = (level: number) => {
+    if(level >= 10) {
+        return 'color-item-Legendary';
+    } else if (level >= 2) {
+        return 'color-item-Epic';
+    }
+
+    return 'color-item-Poor';
+}
+
+function MPlusStatus(props: RIOProps) {
+    if(!props.runs) {
+        return null;
+    }
+
+    const sorted_runs = props.runs.sort((a, b) => b.mythic_level - a.mythic_level);
+
+    const vaultSlots = [
+        sorted_runs[0]?.mythic_level ?? 'X',
+        sorted_runs[3]?.mythic_level ?? 'X',
+        sorted_runs[7]?.mythic_level ?? 'X',
+    ].filter(e => e !== undefined);
+
+    return (
+        <Tooltip title={sorted_runs.length > 0 ? <MPlusStatusTooltip runs={sorted_runs} /> : null} placement={"right"} arrow={true}>
+            <div className={"mplus-status"}>
+                {vaultSlots.map((c,i) => <div key={i} className={mPlusLevelToVariant(c)}>{c}</div>)}
+            </div>
+        </Tooltip>
+    );
+}
+
+function MPlusStatusTooltip(props: RIOProps) {
+    return (
+        <div className={"encounter-tooltip"}>
+            {props.runs.map((run,i) =>
+                <div className={"encounter"} key={i}>
+                    <div>{run.dungeon}</div>
+                    <div className={mPlusLevelToVariant(run.mythic_level)}>+{run.mythic_level}</div>
                 </div>
             )}
         </div>
