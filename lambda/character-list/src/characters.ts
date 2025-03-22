@@ -9,6 +9,7 @@ import {SessionData, sessionMiddleware} from "./auth/middleware";
 import httpContentNegotiation from "@middy/http-content-negotiation";
 import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
+import {getRaiderIOApiKey} from "./lib";
 
 const REGIONS = ["eu", "us", "kr", "tw"];
 const MAX_LEVEL = 80;
@@ -89,6 +90,27 @@ const fetchCharacterMythicKeystoneProfile = async (character: any, region: strin
     return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: mythicKeystoneProfileResponseData};
 }
 
+const fetchCharacterRaiderIOProfile = async (character: any, region: string) => {
+    const rioCredentials = await getRaiderIOApiKey();
+    const rioResponse = await fetch(`https://raider.io/api/v1/characters/profile?region=${region}&realm=${character.realm.slug}&name=${character.name.toLowerCase()}&fields=mythic_plus_weekly_highest_level_runs`, {
+        headers: {
+            Authorization: `Bearer ${rioCredentials.api_key}`,
+        }
+    });
+
+    if(!rioResponse.ok) {
+        logger.error(`Unexpected response status when fetching RIO info for ${character.name}-${character.realm.slug}`, {
+            status: rioResponse.status,
+            text: await rioResponse.text(),
+        });
+        throw new Error(`Failed to fetch profile info for ${character.name}-${character.realm.slug}`);
+    }
+
+    const rioResponseData = await rioResponse.json();
+
+    return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: rioResponseData};
+}
+
 
 const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Promise<APIGatewayProxyResultV2> => {
     const region = request.pathParameters?.region;
@@ -128,15 +150,18 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
         account.characters.filter((character: any) => character.level === MAX_LEVEL)
     ).flat();
 
+    await getRaiderIOApiKey(); //Ensure credentials are prefetched
     const raidsPromise = fetchForEach(maxLevelCharacters, 'raids', (character) => fetchCharacterRaids(character, region, request.session.battleNet.access_token));
     const profilePromise = fetchForEach(maxLevelCharacters, 'character profile', (character) => fetchCharacterProfile(character, region, request.session.battleNet.access_token));
     const mythicKeystonePromise = fetchForEach(maxLevelCharacters, 'mythic keystone profile', (character) => fetchCharacterMythicKeystoneProfile(character, region, request.session.battleNet.access_token));
+    const rioPromise = fetchForEach(maxLevelCharacters, 'RIO profile', (character) => fetchCharacterRaiderIOProfile(character, region));
 
     //Wait for all promises to resolve
     await Promise.allSettled([
         raidsPromise,
         profilePromise,
-        mythicKeystonePromise
+        mythicKeystonePromise,
+        rioPromise
     ]);
 
     return {
@@ -149,6 +174,7 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
             raids: await raidsPromise,
             characterProfile: await profilePromise,
             mythicKeystoneProfile: await mythicKeystonePromise,
+            raiderIOProfile: await rioPromise,
         } as any,
     }
 }

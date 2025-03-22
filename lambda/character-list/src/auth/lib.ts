@@ -1,9 +1,7 @@
 import * as oauthClient from "openid-client";
-import {GetSecretValueCommand, SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
-import {tracer} from "../util";
+import {GetSecretValueCommand} from "@aws-sdk/client-secrets-manager";
 import * as jose from "jose";
-
-const secretsClient = tracer.captureAWSv3Client(new SecretsManagerClient({region: process.env.AWS_REGION}));
+import {secretsClient} from "../lib";
 
 const OAUTH_REDIRECT_URL = `https://${process.env.BASE_DOMAIN}/api/auth/callback`;
 const OAUTH_CODE_CHALLENGE_METHOD = 'S256';
@@ -13,11 +11,6 @@ interface OAuthCredentials {
     client_id: string,
     client_secret: string,
     session_key: string,
-}
-
-interface Environment {
-    OAUTH_CREDENTIALS_SECRET_ARN: string,
-    BASE_DOMAIN: string,
 }
 
 // Caching getter for the OAuth credentials

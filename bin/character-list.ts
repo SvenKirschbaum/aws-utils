@@ -7,6 +7,7 @@ const app = new cdk.App();
 new CharacterListStack(app, 'CharacterListStack', {
     domainName: 'chars.theramo.re',
     battlenetCredentialsSecretName: 'character-list-battlenet-oauth',
+    raiderIOCredentialsSecretName: 'character-list-raiderio',
     dnsDelegation: {
         account: dnsAccountID,
         roleName: 'CharsDnsDelegationRole',

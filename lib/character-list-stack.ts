@@ -26,6 +26,7 @@ import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 export interface CharacterListStackProps extends cdk.StackProps {
     domainName: string,
     battlenetCredentialsSecretName: string,
+    raiderIOCredentialsSecretName: string,
     dnsDelegation: R53DelegationRoleInfo
 }
 
@@ -174,7 +175,8 @@ export class CharacterListStack extends cdk.Stack {
     private createApi() {
         this.httpApi = new HttpApi(this, 'HttpApi');
 
-        const secret = Secret.fromSecretNameV2(this, 'BattlenetCredentialst', this.props.battlenetCredentialsSecretName);
+        const battleNetSecret = Secret.fromSecretNameV2(this, 'BattlenetCredentials', this.props.battlenetCredentialsSecretName);
+        const raiderIOSecret = Secret.fromSecretNameV2(this, 'RaiderIOCredentials', this.props.raiderIOCredentialsSecretName);
 
         const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {
             entry: 'lambda/character-list/src/auth/start.ts',
@@ -186,10 +188,10 @@ export class CharacterListStack extends cdk.Stack {
             memorySize: 1769,
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
-                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+                'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
             }
         });
-        secret.grantRead(authStartFunction);
+        battleNetSecret.grantRead(authStartFunction);
 
         this.httpApi.addRoutes({
             path: '/api/auth/start',
@@ -206,11 +208,11 @@ export class CharacterListStack extends cdk.Stack {
             memorySize: 1769,
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
-                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+                'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response contains sensitive data
             }
         });
-        secret.grantRead(authCallbackFunction);
+        battleNetSecret.grantRead(authCallbackFunction);
 
         this.httpApi.addRoutes({
             path: '/api/auth/callback',
@@ -227,11 +229,13 @@ export class CharacterListStack extends cdk.Stack {
             memorySize: 1769,
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
-                'OAUTH_CREDENTIALS_SECRET_ARN': secret.secretArn,
+                'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
+                'RAIDERIO_CREDENTIALS_SECRET_ARN': raiderIOSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
             }
         });
-        secret.grantRead(listCharactersFunction);
+        battleNetSecret.grantRead(listCharactersFunction);
+        raiderIOSecret.grantRead(listCharactersFunction);
 
         this.httpApi.addRoutes({
             path: '/api/characters/{region}',
