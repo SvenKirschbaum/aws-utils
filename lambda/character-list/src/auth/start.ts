@@ -7,6 +7,7 @@ import {logger, tracer} from "../util";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
 import {startOAuthAuthorization} from "./lib";
+import {originMiddleware} from "../origin-middleware";
 
 
 const lambdaHandler = async function (_: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
@@ -26,6 +27,7 @@ const lambdaHandler = async function (_: APIGatewayProxyEventV2): Promise<APIGat
 export const handler = middy(lambdaHandler)
     .use(captureLambdaHandler(tracer))
     .use(injectLambdaContext(logger))
+    .use(originMiddleware())
     .use(httpErrorHandlerMiddleware())
     .use(errorLogger())
     .use(httpHeaderNormalizer())

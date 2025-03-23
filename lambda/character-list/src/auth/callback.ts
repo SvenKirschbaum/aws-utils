@@ -7,6 +7,7 @@ import {logger, tracer} from "../util";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
 import {finishOAuthAuthorization} from "./lib";
+import {originMiddleware} from "../origin-middleware";
 
 const lambdaHandler = async function (request: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
     const clientContext = request.cookies?.filter(cookie => cookie.startsWith('authContext')).map(cookie => cookie.split('=')[1]);
@@ -33,6 +34,7 @@ const lambdaHandler = async function (request: APIGatewayProxyEventV2): Promise<
 export const handler = middy(lambdaHandler)
     .use(captureLambdaHandler(tracer))
     .use(injectLambdaContext(logger))
+    .use(originMiddleware())
     .use(httpErrorHandlerMiddleware())
     .use(errorLogger())
     .use(httpHeaderNormalizer())

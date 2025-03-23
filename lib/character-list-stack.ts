@@ -24,7 +24,7 @@ import {HostedZone, RecordType} from "aws-cdk-lib/aws-route53";
 import {Role} from "aws-cdk-lib/aws-iam";
 import {CrossAccountRoute53RecordSet} from "@fallobst22/cdk-cross-account-route53";
 import {HttpApi} from "aws-cdk-lib/aws-apigatewayv2";
-import {Secret} from "aws-cdk-lib/aws-secretsmanager";
+import {ISecret, Secret} from "aws-cdk-lib/aws-secretsmanager";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
@@ -42,6 +42,7 @@ export class CharacterListStack extends cdk.Stack {
     private props: CharacterListStackProps;
     private frontendOrigin: S3Origin;
     private httpApi: HttpApi;
+    private originSecret: ISecret;
 
     constructor(scope: Construct, id: string, props: CharacterListStackProps) {
         super(scope, id, props);
@@ -136,7 +137,11 @@ export class CharacterListStack extends cdk.Stack {
 
             additionalBehaviors: {
                 '/api/auth/*': {
-                    origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+                    origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint)), {
+                        customHeaders: {
+                            'X-Origin-Secret': this.originSecret.secretValue.unsafeUnwrap()
+                        }
+                    }),
                     viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                     cachePolicy: CachePolicy.CACHING_DISABLED,
                     originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
@@ -145,6 +150,9 @@ export class CharacterListStack extends cdk.Stack {
                     origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint)), {
                         originShieldEnabled: true,
                         originShieldRegion: 'eu-central-1',
+                        customHeaders: {
+                            'X-Origin-Secret': this.originSecret.secretValue.unsafeUnwrap()
+                        }
                     }),
                     viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                     cachePolicy: new CachePolicy(this, 'ApiCachePolicy', {
@@ -194,6 +202,7 @@ export class CharacterListStack extends cdk.Stack {
 
     private createApi() {
         this.httpApi = new HttpApi(this, 'HttpApi');
+        this.originSecret = new Secret(this, 'CloudfrontOriginSecret');
 
         const battleNetSecret = Secret.fromSecretNameV2(this, 'BattlenetCredentials', this.props.battlenetCredentialsSecretName);
         const raiderIOSecret = Secret.fromSecretNameV2(this, 'RaiderIOCredentials', this.props.raiderIOCredentialsSecretName);
@@ -209,9 +218,11 @@ export class CharacterListStack extends cdk.Stack {
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
                 'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
+                'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
             }
         });
         battleNetSecret.grantRead(authStartFunction);
+        this.originSecret.grantRead(authStartFunction);
 
         this.httpApi.addRoutes({
             path: '/api/auth/start',
@@ -229,10 +240,12 @@ export class CharacterListStack extends cdk.Stack {
             environment: {
                 'BASE_DOMAIN': this.props.domainName,
                 'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
+                'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response contains sensitive data
             }
         });
         battleNetSecret.grantRead(authCallbackFunction);
+        this.originSecret.grantRead(authCallbackFunction);
 
         this.httpApi.addRoutes({
             path: '/api/auth/callback',
@@ -251,11 +264,13 @@ export class CharacterListStack extends cdk.Stack {
                 'BASE_DOMAIN': this.props.domainName,
                 'OAUTH_CREDENTIALS_SECRET_ARN': battleNetSecret.secretArn,
                 'RAIDERIO_CREDENTIALS_SECRET_ARN': raiderIOSecret.secretArn,
+                'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
             }
         });
         battleNetSecret.grantRead(listCharactersFunction);
         raiderIOSecret.grantRead(listCharactersFunction);
+        this.originSecret.grantRead(listCharactersFunction);
 
         this.httpApi.addRoutes({
             path: '/api/characters/{region}',

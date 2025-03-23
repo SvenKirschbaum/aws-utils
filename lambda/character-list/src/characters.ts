@@ -10,6 +10,7 @@ import httpContentNegotiation from "@middy/http-content-negotiation";
 import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {getRaiderIOApiKey} from "./lib";
+import {originMiddleware} from "./origin-middleware";
 
 const REGIONS = ["eu", "us", "kr", "tw"];
 const MAX_LEVEL = 80;
@@ -183,6 +184,7 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
 export const handler = middy(lambdaHandler)
     .use(captureLambdaHandler(tracer))
     .use(injectLambdaContext(logger))
+    .use(originMiddleware())
     .use(httpErrorHandlerMiddleware())
     .use(errorLogger())
     .use(httpHeaderNormalizer())
