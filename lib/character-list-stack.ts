@@ -5,10 +5,17 @@ import {Duration, Fn, RemovalPolicy} from "aws-cdk-lib";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
 import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deployment";
 import {
-    CacheCookieBehavior, CacheHeaderBehavior,
-    CachePolicy, CacheQueryStringBehavior,
-    Distribution, HttpVersion,
-    OriginAccessIdentity, OriginRequestPolicy,
+    CacheCookieBehavior,
+    CacheHeaderBehavior,
+    CachePolicy,
+    CacheQueryStringBehavior,
+    Distribution,
+    HttpVersion,
+    OriginAccessIdentity,
+    OriginRequestCookieBehavior,
+    OriginRequestHeaderBehavior,
+    OriginRequestPolicy,
+    OriginRequestQueryStringBehavior,
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
@@ -128,18 +135,31 @@ export class CharacterListStack extends cdk.Stack {
             defaultBehavior: frontendBehavior,
 
             additionalBehaviors: {
-                '/api/*': {
+                '/api/auth/*': {
                     origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint))),
+                    viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cachePolicy: CachePolicy.CACHING_DISABLED,
+                    originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+                },
+                '/api/*': {
+                    origin: new HttpOrigin(Fn.select(2, Fn.split('/', this.httpApi.apiEndpoint)), {
+                        originShieldEnabled: true,
+                        originShieldRegion: 'eu-central-1',
+                    }),
                     viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                     cachePolicy: new CachePolicy(this, 'ApiCachePolicy', {
                         minTtl: Duration.seconds(0),
                         defaultTtl: Duration.seconds(0),
                         maxTtl: Duration.days(1),
-                        cookieBehavior: CacheCookieBehavior.allowList('session', 'state'),
+                        cookieBehavior: CacheCookieBehavior.allowList('session'),
                         headerBehavior: CacheHeaderBehavior.none(),
-                        queryStringBehavior: CacheQueryStringBehavior.all()
+                        queryStringBehavior: CacheQueryStringBehavior.none()
                     }),
-                    originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+                    originRequestPolicy: new OriginRequestPolicy(this, 'ApiOriginRequestPolicy', {
+                        cookieBehavior: OriginRequestCookieBehavior.allowList('session'),
+                        headerBehavior: OriginRequestHeaderBehavior.none(),
+                        queryStringBehavior: OriginRequestQueryStringBehavior.none()
+                    }),
                 },
             },
             httpVersion: HttpVersion.HTTP2_AND_3,
