@@ -9,9 +9,9 @@
     "@fontsource/roboto": "^5.0.12",
     "@mui/icons-material": "^6.0.0",
     "@mui/material": "^6.0.0",
-    "react": "19.0.0",
+    "react": "19.1.0",
     "react-cookie-consent": "9.0.0",
-    "react-dom": "19.0.0",
+    "react-dom": "19.1.0",
     "typescript": "5.8.2"
   },
   "scripts": {
