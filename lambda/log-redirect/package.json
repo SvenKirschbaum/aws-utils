@@ -10,15 +10,15 @@
     "@middy/http-response-serializer": "6.1.6",
     "@middy/error-logger": "6.1.6",
     "@middy/http-content-negotiation": "6.1.6",
-    "@aws-sdk/client-secrets-manager": "3.777.0",
+    "@aws-sdk/client-secrets-manager": "3.782.0",
     "graphql-request": "7.1.2",
     "jwt-decode": "4.0.0",
-    "luxon": "3.6.0"
+    "luxon": "3.6.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.148",
     "@types/http-errors": "2.0.4",
-    "@types/luxon": "3.4.2",
-    "typescript": "5.8.2"
+    "@types/luxon": "3.6.2",
+    "typescript": "5.8.3"
   }
 }

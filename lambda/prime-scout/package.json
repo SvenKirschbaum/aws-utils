@@ -11,15 +11,15 @@
     "@middy/error-logger": "6.1.6",
     "@middy/http-content-negotiation": "6.1.6",
     "@middy/http-json-body-parser": "6.1.6",
-    "luxon": "3.6.0",
+    "luxon": "3.6.1",
     "node-fetch": "^3.3.2",
     "jsdom": "^26.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.148",
     "@types/http-errors": "2.0.4",
-    "typescript": "5.8.2",
-    "@types/luxon": "3.4.2",
+    "typescript": "5.8.3",
+    "@types/luxon": "3.6.2",
     "@types/jsdom": "^21.1.6"
   }
 }
