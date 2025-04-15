@@ -1,4 +1,4 @@
-import {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import {createContext, Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import './App.css'
 import {Outlet, useLoaderData, useNavigate, useNavigation, useParams} from "react-router";
 import {
@@ -7,9 +7,20 @@ import {
     CircularProgress,
     Container,
     createTheme,
-    CssBaseline, FormControlLabel, Link, MenuItem,
-    Select, Stack, Switch,
-    ThemeProvider, Tooltip,
+    CssBaseline,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControlLabel,
+    FormGroup, FormLabel,
+    Link,
+    MenuItem,
+    Select,
+    Stack,
+    Switch,
+    ThemeProvider,
+    Tooltip,
     useMediaQuery
 } from "@mui/material";
 import {
@@ -69,12 +80,19 @@ const router = createBrowserRouter([
     },
 ])
 
-declare interface SettingsContextType {
-    showOnlyLatestRaid: boolean,
-    setShowOnlyLatestRaid: (show: boolean) => void
+declare interface Settings {
+    showOnlyLatestRaid: boolean
+    showLFR: boolean
+    showNormal: boolean
+    showHeroic: boolean
+    showMythic: boolean
 }
 
-const SettingsContext = createContext(undefined as unknown as SettingsContextType);
+declare interface SettingsContextType extends Settings {
+    updateSettings: Dispatch<SetStateAction<Settings>>
+}
+
+const SettingsContext = createContext({} as SettingsContextType);
 
 function App() {
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)') || true; // Light mode doesn't work well with class colors.
@@ -143,6 +161,14 @@ const defaultState: GridInitialStateCommunity = {
     },
 }
 
+const defaultSettings: Settings = {
+    showOnlyLatestRaid: true,
+    showLFR: false,
+    showNormal: true,
+    showHeroic: true,
+    showMythic: true,
+}
+
 function CharacterList() {
     const data: {
         profile: any,
@@ -153,11 +179,12 @@ function CharacterList() {
     } = useLoaderData() as any;
     const apiRef = useGridApiRef();
     const [key, setKey] = useState(0);
-    const [showOnlyLatestRaid, setShowOnlyLatestRaid] = useState(true);
+    const [settings, updateSettings] = useState<Settings>(defaultSettings);
 
     //Restore saved state
     useEffect(() => {
         const storedStateString = localStorage.getItem('gridState');
+        const storedSettingString = localStorage.getItem('settings');
         if(storedStateString) {
             const storedState = JSON.parse(storedStateString);
 
@@ -167,19 +194,27 @@ function CharacterList() {
                 apiRef.current.restoreState(storedState);
             }
         }
+        if(storedSettingString) {
+            const storedSettings = JSON.parse(storedSettingString);
+            updateSettings((s) => ({
+                ...s,
+                ...storedSettings
+            }));
+        }
     }, []);
 
     //Save state on unload
     const saveState = useCallback(() => {
         localStorage.setItem('gridState', JSON.stringify({...apiRef.current.exportState(), version: GRID_CONFIG_VERSION}));
-    }, []);
+        localStorage.setItem('settings', JSON.stringify(settings));
+    }, [settings]);
 
     useEffect(() => {
         window.addEventListener('beforeunload', saveState);
         return () => {
             window.removeEventListener('beforeunload', saveState);
         };
-    }, []);
+    }, [settings]);
 
     const rows: GridRowModel[] = useMemo(() => {
         const r: GridRowModel[] = [];
@@ -228,8 +263,8 @@ function CharacterList() {
 
     return (
         <SettingsContext value={{
-            showOnlyLatestRaid,
-            setShowOnlyLatestRaid
+            ...settings,
+            updateSettings
         }}>
             <DataGrid
                 key={key}
@@ -280,13 +315,25 @@ function RaidStatus(props: {value: any}) {
 
     if(!props.value) {
         return "";
-
     }
+
+    const instances = props.value.map((instance: any) => {
+        const modes = instance.modes
+            .filter((mode: any) => mode.difficulty.type != "LFR" || settings.showLFR)
+            .filter((mode: any) => mode.difficulty.type != "NORMAL" || settings.showNormal)
+            .filter((mode: any) => mode.difficulty.type != "HEROIC" || settings.showHeroic)
+            .filter((mode: any) => mode.difficulty.type != "MYTHIC" || settings.showMythic)
+
+        return {
+            ...instance,
+            modes
+        }
+    }).filter((instance: any) => instance.modes.length > 0);
 
     return (
         <div className={'raid-status'}>
             {
-                props.value.filter(
+                instances.filter(
                     (instance: any) => instance.instance.id === LATEST_RAID || !settings.showOnlyLatestRaid
                 ).map(
                     (instance: any) => <InstanceStatus key={instance.instance.id} {...instance} />
@@ -407,16 +454,10 @@ function MPlusStatusTooltip(props: RIOProps) {
 function Footer(props: any) {
     const {region} = useParams();
     const navigate = useNavigate();
-    const settings = useContext(SettingsContext);
 
     const onChange = (event: any) => {
         navigate(`/${event.target.value}`);
     };
-
-    const resetState = useCallback(() => {
-        localStorage.removeItem('gridState');
-        props.setKey((prev: number) => prev+1);
-    }, []);
 
     return (
         <GridFooterContainer>
@@ -426,15 +467,7 @@ function Footer(props: any) {
                         <MenuItem key={region} value={region}>{region.toUpperCase()}</MenuItem>
                     ))}
                 </Select>
-                <Button className="reset-button" variant={"outlined"} onClick={resetState}>
-                    Reset Grid Configuration
-                </Button>
-                <FormControlLabel
-                    value={false}
-                    control={<Switch color="primary" checked={settings.showOnlyLatestRaid} onChange={(e) => settings.setShowOnlyLatestRaid(e.target.checked)} />}
-                    label="Show only latest Raid"
-                    labelPlacement="end"
-                />
+                <SettingsDialog setKey={props.setKey}></SettingsDialog>
                 <GridFooter sx={{
                     border: 'none', // To delete double border.
                 }} >
@@ -442,6 +475,83 @@ function Footer(props: any) {
             </Stack>
         </GridFooterContainer>
     )
+}
+
+function SettingsDialog(props: any) {
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const settings = useContext(SettingsContext);
+    const resetState = useCallback(() => {
+        localStorage.removeItem('gridState');
+        localStorage.removeItem('settings');
+        settings.updateSettings(defaultSettings);
+        props.setKey((prev: number) => prev+1);
+    }, []);
+
+    return <>
+        <Button className="settings-button" variant="outlined" onClick={handleClickOpen}>
+            Settings
+        </Button>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+        >
+            <DialogTitle>
+                {"Settings"}
+            </DialogTitle>
+            <DialogContent>
+                <FormLabel component="legend">General</FormLabel>
+                <FormGroup>
+                    <FormControlLabel
+                        value={false}
+                        control={<Switch color="primary" checked={settings.showOnlyLatestRaid} onChange={(e) => settings.updateSettings(s => ({...s, showOnlyLatestRaid: e.target.checked}))} />}
+                        label="Show only latest Raid"
+                    />
+                </FormGroup>
+                <FormLabel component="legend">Raid Difficulties</FormLabel>
+                <FormGroup>
+                    <FormControlLabel
+                        control={<Switch checked={settings.showLFR} onChange={(e) => settings.updateSettings(s => ({...s, showLFR: e.target.checked}))} />}
+                        label="Show LFR"
+                    />
+                </FormGroup>
+                <FormGroup>
+                    <FormControlLabel
+                        control={<Switch checked={settings.showNormal} onChange={(e) => settings.updateSettings(s => ({...s, showNormal: e.target.checked}))} />}
+                        label="Show Normal"
+                    />
+                </FormGroup>
+                <FormGroup>
+                    <FormControlLabel
+                        control={<Switch checked={settings.showHeroic} onChange={(e) => settings.updateSettings(s => ({...s, showHeroic: e.target.checked}))} />}
+                        label="Show Heroic"
+                    />
+                </FormGroup>
+                <FormGroup>
+                    <FormControlLabel
+                        control={<Switch checked={settings.showMythic} onChange={(e) => settings.updateSettings(s => ({...s, showMythic: e.target.checked}))} />}
+                        label="Show Mythic"
+                    />
+                </FormGroup>
+            </DialogContent>
+            <DialogActions>
+                <Button variant={"outlined"} color={"error"} onClick={resetState}>
+                    Reset Settings
+                </Button>
+                <Button onClick={handleClose} autoFocus>
+                    Close
+                </Button>
+            </DialogActions>
+        </Dialog>
+    </>
 }
 
 function LoadingWrapper() {
