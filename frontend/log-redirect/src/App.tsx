@@ -5,10 +5,11 @@ import {
     CircularProgress,
     Container,
     createTheme,
-    CssBaseline, Grid, Link, List, ListItem,
+    CssBaseline, Link, List, ListItem,
     ThemeProvider,
     useMediaQuery
 } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
 import React, {useEffect, useState} from "react";
 
 export const REPORT_URL_PREFIX = 'https://www.warcraftlogs.com/reports/';
