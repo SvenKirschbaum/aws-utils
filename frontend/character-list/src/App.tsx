@@ -29,7 +29,8 @@ import {
     GridFooter,
     GridFooterContainer,
     GridRowModel,
-    useGridApiRef
+    useGridApiRef,
+    GridInitialState
 } from "@mui/x-data-grid";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -48,7 +49,6 @@ import {
     WEEKLY_RESET
 } from "./constants.tsx";
 import {DateTime} from "luxon";
-import {GridInitialStateCommunity} from "@mui/x-data-grid/models/gridStateCommunity";
 
 const router = createBrowserRouter([
     {
@@ -147,7 +147,7 @@ const columns: GridColDef[] = [
     { field: 'false', headerName: 'Links', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <CharacterLinks name={params.row.name.toLowerCase()} realmSlug={params.row.realmSlug} />},
 ];
 
-const defaultState: GridInitialStateCommunity = {
+const defaultState: GridInitialState = {
     pagination: { paginationModel: { pageSize: 15 } },
     columns: {
         columnVisibilityModel: {
@@ -183,6 +183,7 @@ function CharacterList() {
 
     //Restore saved state
     useEffect(() => {
+        if(apiRef.current === null) return;
         const storedStateString = localStorage.getItem('gridState');
         const storedSettingString = localStorage.getItem('settings');
         if(storedStateString) {
@@ -205,6 +206,7 @@ function CharacterList() {
 
     //Save state on unload
     const saveState = useCallback(() => {
+        if(apiRef.current === null) return;
         localStorage.setItem('gridState', JSON.stringify({...apiRef.current.exportState(), version: GRID_CONFIG_VERSION}));
         localStorage.setItem('settings', JSON.stringify(settings));
     }, [settings]);
