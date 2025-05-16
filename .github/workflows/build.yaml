@@ -143,3 +143,21 @@ jobs:
         with:
           name: character-list-app-cloud-assembly
           path: cdk.out
+  build-home-assistant-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install CDK dependencies
+        run: npm ci
+      - name: Build cloud assembly
+        run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/home-assistant.ts"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-assistant-app-cloud-assembly
+          path: cdk.out
