@@ -21,7 +21,7 @@
     "@emotion/styled": "^11.11.5",
     "@fontsource/roboto": "^5.0.13",
     "@mui/icons-material": "^7.0.0",
-    "@mui/x-data-grid": "8.5.1"
+    "@mui/x-data-grid": "8.5.3"
   },
   "devDependencies": {
     "@types/luxon": "3.6.2",
