@@ -2,16 +2,16 @@
   "name": "character-list-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.22.0",
-    "@aws-lambda-powertools/tracer": "2.22.0",
-    "@aws-sdk/client-secrets-manager": "3.839.0",
+    "@aws-lambda-powertools/logger": "2.23.0",
+    "@aws-lambda-powertools/tracer": "2.23.0",
+    "@aws-sdk/client-secrets-manager": "3.840.0",
     "@middy/core": "6.3.2",
     "@middy/http-header-normalizer": "6.3.2",
     "@middy/http-error-handler": "6.3.2",
     "@middy/http-response-serializer": "6.3.2",
     "@middy/error-logger": "6.3.2",
     "@middy/http-content-negotiation": "6.3.2",
-    "openid-client": "6.6.1",
+    "openid-client": "6.6.2",
     "node-jose": "2.2.0"
   },
   "devDependencies": {
