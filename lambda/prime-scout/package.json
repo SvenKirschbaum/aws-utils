@@ -11,7 +11,7 @@
     "@middy/error-logger": "6.3.2",
     "@middy/http-content-negotiation": "6.3.2",
     "@middy/http-json-body-parser": "6.3.2",
-    "luxon": "3.6.1",
+    "luxon": "3.7.1",
     "node-fetch": "^3.3.2",
     "jsdom": "^26.0.0"
   },
