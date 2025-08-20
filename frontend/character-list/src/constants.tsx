@@ -14,10 +14,11 @@ export const SPECS = ['Affliction', 'Arcane', 'Arms', 'Assassination', 'Augmenta
 
 export const RAID_ABBREVIATIONS: {[key: number]: string} = {
     1273: 'NP',
-    1296: 'LoU'
+    1296: 'LoU',
+    1302: 'MfO',
 };
 
-export const LATEST_RAID = 1296;
+export const LATEST_RAID = 1302;
 
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
     'LFR': 'LFR',
