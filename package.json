@@ -13,7 +13,7 @@
   "devDependencies": {
     "@types/jest": "30.0.0",
     "@types/node": "22.17.2",
-    "aws-cdk": "2.1025.0",
+    "aws-cdk": "2.1026.0",
     "esbuild": "0.25.9",
     "jest": "30.0.5",
     "ts-jest": "^29.1.0",
@@ -21,10 +21,10 @@
     "typescript": "~5.9.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "^2.211.0-alpha",
-    "@fallobst22/cdk-cross-account-route53": "^0.0.79",
-    "@trautonen/cdk-dns-validated-certificate": "0.1.26",
-    "aws-cdk-lib": "2.211.0",
+    "@aws-cdk/aws-lambda-python-alpha": "^2.212.0-alpha",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.80",
+    "@trautonen/cdk-dns-validated-certificate": "0.1.27",
+    "aws-cdk-lib": "2.212.0",
     "constructs": "10.4.2",
     "source-map-support": "0.5.21"
   }
