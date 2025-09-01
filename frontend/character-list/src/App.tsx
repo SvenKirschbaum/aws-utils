@@ -40,7 +40,7 @@ import wclLogoUrl from './assets/wcl-icon.png'
 import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
 import {ErrorBoundary} from "react-error-boundary";
 import {
-    CLASSES,
+    CLASSES, CURRENT_SETS,
     DIFFUCULTY_ABBREVIATIONS,
     FACTIONS, GENDERS, LATEST_RAID,
     RACES,
@@ -133,6 +133,7 @@ const columns: GridColDef[] = [
     { field: 'className', headerName: 'Class', headerAlign: 'center', type: 'singleSelect', valueOptions: CLASSES, cellClassName: (params) => `color-class-${params.row.classId}`},
     { field: 'equippedItemLevel', headerName: 'Item Level', headerAlign: 'center', type: 'number' },
     { field: 'averageItemLevel', headerName: 'Item Level (Average)', headerAlign: 'center', type: 'number' },
+    { field: 'set', headerName: 'Set', headerAlign: 'center', filterable: false, sortable: false, renderCell: (params) => <SetWrapper {...params} />},
     { field: 'mythicRating', headerName: 'M+ Rating', headerAlign: 'center', type: 'number', renderCell: (params) => <MythicRating rating={params.row.mythicRating} color={params.row.mythicRatingColor}></MythicRating>},
     { field: 'realm', headerName: 'Realm', headerAlign: 'center' },
     { field: 'factionName', headerName: 'Faction', headerAlign: 'center', type: 'singleSelect', valueOptions: FACTIONS, cellClassName: (params) => `color-faction-${params.row.factionType}`},
@@ -174,6 +175,7 @@ function CharacterList() {
         profile: any,
         raids: {[char: string]: any[]},
         characterProfile: {[char: string]: any},
+        characterEquipment: {[char: string]: any},
         mythicKeystoneProfile: {[char: string]: any},
         raiderIOProfile: {[char: string]: any},
     } = useLoaderData() as any;
@@ -247,6 +249,8 @@ function CharacterList() {
                     lastLogin: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.last_login_timestamp,
                     equippedItemLevel: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.equipped_item_level,
                     averageItemLevel: data.characterProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.average_item_level,
+                    // Character Equipment data
+                    set: data.characterEquipment?.[`${character.name.toLowerCase()}-${character.realm.slug}`],
                     // Mythic Keystone Profile data
                     mythicRating: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.rating,
                     mythicRatingColor: data.mythicKeystoneProfile?.[`${character.name.toLowerCase()}-${character.realm.slug}`]?.current_mythic_rating?.color,
@@ -592,6 +596,47 @@ function CharacterLinks(props: {name: string, realmSlug: string}) {
             <Link display={"contents"} href={`https://raider.io/characters/${routeParams.region}/${props.realmSlug}/${props.name}`}><RaiderIOIcon className={"link-logo"} /></Link>
             <Link display={"contents"} href={`https://www.warcraftlogs.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><img className={"link-logo"} alt={"WCL"} src={wclLogoUrl} /></Link>
         </Box>
+    );
+}
+
+function SetWrapper(props: any) {
+    return (
+        <ErrorBoundary fallback={<span>Error</span>}>
+            <SetDisplay {...props} />
+        </ErrorBoundary>
+    )
+}
+
+function SetDisplay(props: any) {
+    const equipment = props.value;
+
+    if (equipment) {
+        const currentSets = (equipment?.equipped_item_sets ?? []).filter((set: any) => CURRENT_SETS.has(set.item_set.id));
+
+        if(currentSets.length > 0) {
+            return (
+                <div className={'sets'}>
+                    {currentSets.map((set: any) => <Set key={set.item_set.id} {...set} equipment={equipment} />)}
+                </div>
+            );
+        }
+
+        return <div className={'sets'}><div className={"set-count-0"}>0</div></div>;
+    }
+
+    return "";
+}
+
+function Set(props: any) {
+    const equipped = props.items.filter((item: any) => item.is_equipped);
+    const items = equipped.map((item: any) => props.equipment.equipped_items.find((ei: any) => ei.item.id === item.item.id));
+
+    console.log(items);
+
+    return (
+        <div>
+            <span className={"set-count-"+equipped.length}>{equipped.length}</span>
+        </div>
     );
 }
 

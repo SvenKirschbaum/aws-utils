@@ -20,6 +20,8 @@ export const RAID_ABBREVIATIONS: {[key: number]: string} = {
 
 export const LATEST_RAID = 1302;
 
+export const CURRENT_SETS = new Set([1926, 1930, 1929, 1960, 1921, 1923, 1931, 1920, 1927, 1924, 1919, 1928, 1925, 1922/*,  Test  1875*/]);
+
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
     'LFR': 'LFR',
     'NORMAL': 'NHC',
