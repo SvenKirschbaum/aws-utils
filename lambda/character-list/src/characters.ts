@@ -71,6 +71,26 @@ const fetchCharacterProfile = async (character: any, region: string, battleNetTo
     return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: profileResponseData};
 }
 
+const fetchCharacterEquipment = async (character: any, region: string, battleNetToken: string) => {
+    const equipmentResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/equipment?namespace=profile-${region}&locale=en_US`, {
+        headers: {
+            Authorization: `Bearer ${battleNetToken}`,
+        }
+    });
+
+    if(!equipmentResponse.ok) {
+        logger.error(`Unexpected response status when fetching equipment info for ${character.name}-${character.realm.slug}`, {
+            status: equipmentResponse.status,
+            text: await equipmentResponse.text(),
+        });
+        throw new Error(`Failed to fetch equipment info for ${character.name}-${character.realm.slug}`);
+    }
+
+    const equipmentResponseData = await equipmentResponse.json();
+
+    return {[`${character.name.toLowerCase()}-${character.realm.slug}`]: equipmentResponseData};
+}
+
 const fetchCharacterMythicKeystoneProfile = async (character: any, region: string, battleNetToken: string) => {
     const mythicKeystoneProfileResponse = await fetch(`https://${region}.api.blizzard.com/profile/wow/character/${character.realm.slug}/${character.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-${region}&locale=en_US`, {
         headers: {
@@ -154,6 +174,7 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
     await getRaiderIOApiKey(); //Ensure credentials are prefetched
     const raidsPromise = fetchForEach(maxLevelCharacters, 'raids', (character) => fetchCharacterRaids(character, region, request.session.battleNet.access_token));
     const profilePromise = fetchForEach(maxLevelCharacters, 'character profile', (character) => fetchCharacterProfile(character, region, request.session.battleNet.access_token));
+    const equipmentPromise = fetchForEach(maxLevelCharacters, 'character equipment', (character) => fetchCharacterEquipment(character, region, request.session.battleNet.access_token));
     const mythicKeystonePromise = fetchForEach(maxLevelCharacters, 'mythic keystone profile', (character) => fetchCharacterMythicKeystoneProfile(character, region, request.session.battleNet.access_token));
     const rioPromise = fetchForEach(maxLevelCharacters, 'RIO profile', (character) => fetchCharacterRaiderIOProfile(character, region));
 
@@ -161,6 +182,7 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
     await Promise.allSettled([
         raidsPromise,
         profilePromise,
+        equipmentPromise,
         mythicKeystonePromise,
         rioPromise
     ]);
@@ -174,6 +196,7 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
             profile: profileData,
             raids: await raidsPromise,
             characterProfile: await profilePromise,
+            characterEquipment: await equipmentPromise,
             mythicKeystoneProfile: await mythicKeystonePromise,
             raiderIOProfile: await rioPromise,
         } as any,
