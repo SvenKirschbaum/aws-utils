@@ -13,7 +13,7 @@
     "@middy/http-json-body-parser": "6.4.5",
     "luxon": "3.7.2",
     "node-fetch": "^3.3.2",
-    "jsdom": "^26.0.0"
+    "jsdom": "^27.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.152",
