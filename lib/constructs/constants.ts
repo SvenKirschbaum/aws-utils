@@ -104,7 +104,4 @@ export const DOMAINS: {[key: string]: DomainProperties} = {
             'g18102016': 'v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApsvZT6MOvasdtSnTz38y1Zwxcaq/FYV5zP789JyoUHuLktY9lRgYGIXeJrxaSjo+RlCrqN3g4cfHX/MGkwxwpp3Qal7zDvRBERWyyj169s8N8UWi8AIsMzFqAymJPkCDU3nW99WXafJrFZvmX1lVpY1cctA/G4pjx1RCT7Ixcv72hWR8lRgUWlc2lEIykZQ9s4tUd3+NbsreUnxgkvN4PD0M7w9ORU7b7iIAR2N5DAwgD5FiTQ84JiqZILzQ69y6CS/FCdlLSxPcq7yYO+OsQ8zj/RAAvfG4CrRykxMHAi3GTo8RHWyxgt8MHmZpcgtJQU0Vz+MZiaM0Dx6KdWRpmwIDAQAB'
         }
     },
-    'evicted.pro': {
-        defaultRecords: true
-    },
 };
