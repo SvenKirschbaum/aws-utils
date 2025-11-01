@@ -4,7 +4,7 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "2.28.1",
     "@aws-lambda-powertools/tracer": "2.28.1",
-    "@aws-sdk/client-secrets-manager": "3.917.0",
+    "@aws-sdk/client-secrets-manager": "3.922.0",
     "@middy/core": "6.4.5",
     "@middy/http-header-normalizer": "6.4.5",
     "@middy/http-error-handler": "6.4.5",
@@ -15,7 +15,7 @@
     "node-jose": "2.2.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.156",
+    "@types/aws-lambda": "8.10.157",
     "@types/http-errors": "2.0.5",
     "typescript": "5.9.3"
   }
