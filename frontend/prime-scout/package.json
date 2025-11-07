@@ -31,7 +31,7 @@
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-basic-ssl": "2.1.0",
     "@vitejs/plugin-react": "5.1.0",
-    "vite": "7.1.12",
+    "vite": "7.2.2",
     "vite-plugin-svgr": "4.5.0"
   }
 }
