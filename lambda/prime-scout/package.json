@@ -16,7 +16,7 @@
     "jsdom": "^27.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.157",
+    "@types/aws-lambda": "8.10.158",
     "@types/http-errors": "2.0.5",
     "typescript": "5.9.3",
     "@types/luxon": "3.7.1",
