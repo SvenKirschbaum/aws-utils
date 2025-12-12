@@ -13,6 +13,10 @@ export const HOSTS: {[key: string]: HostProperties} = {
         V4: "89.58.34.152",
         V6: "2a03:4000:64:95::1"
     },
+    'main-02-nue-nc': {
+        V4: "159.195.67.176",
+        V6: "2a0a:4cc0:c2:18b4::1"
+    },
     'obs-01-vie-nc': {
         V4: "152.53.19.135",
         V6: "2a0a:4cc0:1:11b6::1"
