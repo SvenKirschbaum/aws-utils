@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@types/jest": "30.0.0",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "aws-cdk": "2.1033.0",
     "esbuild": "0.27.1",
     "jest": "30.2.0",
@@ -21,10 +21,10 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "^2.231.0-alpha",
-    "@fallobst22/cdk-cross-account-route53": "^0.0.89",
+    "@aws-cdk/aws-lambda-python-alpha": "^2.232.1-alpha",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.90",
     "@trautonen/cdk-dns-validated-certificate": "0.1.35",
-    "aws-cdk-lib": "2.231.0",
+    "aws-cdk-lib": "2.232.1",
     "constructs": "10.4.3",
     "source-map-support": "0.5.21"
   }
