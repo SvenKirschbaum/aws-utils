@@ -165,12 +165,12 @@ export class DefaultDomainRecords extends Construct {
 
         new HostRecord(this, 'Root', {
             zone: props.zone,
-            host: 'main-01-nue-nc'
+            host: 'main-02-nue-nc'
         });
 
         new HostRecord(this, 'Wildcard', {
             zone: props.zone,
-            host: 'main-01-nue-nc',
+            host: 'main-02-nue-nc',
             name: '*'
         });
 
