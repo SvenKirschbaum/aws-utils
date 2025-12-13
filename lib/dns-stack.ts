@@ -208,7 +208,7 @@ export class DNSStack extends Stack {
                     port: 5732,
                     weight: 2,
                     priority: 1,
-                    hostName: 'main-01-nue-nc.elite12.de'
+                    hostName: 'main-02-nue-nc.elite12.de'
                 }
             ]
         });
@@ -223,7 +223,7 @@ export class DNSStack extends Stack {
                     port: 5732,
                     weight: 2,
                     priority: 1,
-                    hostName: 'main-01-nue-nc.elite12.de'
+                    hostName: 'main-02-nue-nc.elite12.de'
                 }
             ]
         });
@@ -238,7 +238,7 @@ export class DNSStack extends Stack {
                     port: 3955,
                     weight: 2,
                     priority: 1,
-                    hostName: 'main-01-nue-nc.elite12.de'
+                    hostName: 'main-02-nue-nc.elite12.de'
                 }
             ]
         });
