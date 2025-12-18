@@ -9,6 +9,7 @@ new HomeAssistantStack(app, 'HomeAssistantStack', {
         account: utilAccountID,
         region: 'eu-west-1'
     },
-    baseUrl: "https://home-assistant.home.kirschbaum.me",
+    baseUrl: "https://home-assistant-ext.home.kirschbaum.me",
     skillId: "amzn1.ask.skill.3100a6bd-e648-42c9-957e-e4482b868e15",
+    mTLSCertificateSecretName: "ha-alexa-mtls"
 })
