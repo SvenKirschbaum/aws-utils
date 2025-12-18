@@ -17,12 +17,43 @@ import os
 import json
 import logging
 import urllib3
+import boto3
+import tempfile
+from botocore.exceptions import ClientError
 
 _debug = bool(os.environ.get('DEBUG'))
 
 _logger = logging.getLogger('HomeAssistant-SmartHome')
 _logger.setLevel(logging.DEBUG if _debug else logging.INFO)
 
+session = boto3.session.Session()
+client = session.client(
+    service_name='secretsmanager',
+    region_name=os.environ.get('AWS_REGION')
+)
+
+cert_path = None
+key_path = None
+
+try:
+    get_secret_value_response = client.get_secret_value(
+        SecretId=os.environ.get('MTLS_SECRET_ARN')
+    )
+    val = json.loads(get_secret_value_response['SecretString'])
+
+    cert_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    key_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+
+    cert_file.write(val['cert'])
+    key_file.write(val['key'])
+
+    cert_path = cert_file.name
+    key_path = key_file.name
+
+    cert_file.close()
+    key_file.close()
+except ClientError as e:
+    raise e
 
 def handler(event, context):
     """Handle incoming Alexa directive."""
@@ -56,7 +87,9 @@ def handler(event, context):
 
     http = urllib3.PoolManager(
         cert_reqs='CERT_REQUIRED' if verify_ssl else 'CERT_NONE',
-        timeout=urllib3.Timeout(connect=2.0, read=10.0)
+        timeout=urllib3.Timeout(connect=2.0, read=10.0),
+        cert_file=cert_path,
+        key_file=key_path,
     )
 
     response = http.request(
