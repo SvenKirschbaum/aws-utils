@@ -9,9 +9,9 @@
     "@fontsource/roboto": "^5.0.12",
     "@mui/icons-material": "^7.0.0",
     "@mui/material": "^7.0.0",
-    "react": "19.2.1",
+    "react": "19.2.3",
     "react-cookie-consent": "9.0.0",
-    "react-dom": "19.2.1",
+    "react-dom": "19.2.3",
     "typescript": "5.9.3"
   },
   "scripts": {
@@ -31,7 +31,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-basic-ssl": "2.1.0",
     "@vitejs/plugin-react": "5.1.2",
-    "vite": "7.2.7",
+    "vite": "7.3.0",
     "vite-plugin-svgr": "4.5.0"
   }
 }
