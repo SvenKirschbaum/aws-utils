@@ -21,14 +21,14 @@
     "@emotion/styled": "^11.11.5",
     "@fontsource/roboto": "^5.0.13",
     "@mui/icons-material": "^7.0.0",
-    "@mui/x-data-grid": "8.22.0"
+    "@mui/x-data-grid": "8.22.1"
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@typescript-eslint/eslint-plugin": "8.50.0",
-    "@typescript-eslint/parser": "8.50.0",
+    "@typescript-eslint/eslint-plugin": "8.50.1",
+    "@typescript-eslint/parser": "8.50.1",
     "@vitejs/plugin-react": "5.1.2",
     "eslint": "9.39.2",
     "eslint-plugin-react-hooks": "7.0.1",
