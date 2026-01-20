@@ -170,15 +170,13 @@ export class DNSStack extends Stack {
         new HostRecord(zone, 'ExtGW', {
             zone,
             host: 'gw-03-nue-nc',
-            name: 'ext-gw',
-            ttl: Duration.seconds(60)
+            name: 'ext-gw'
         });
 
         new HostRecord(zone, 'FluxWebhookHome', {
             zone,
             host: 'gw-03-nue-nc',
-            name: '*.home',
-            ttl: Duration.seconds(60)
+            name: '*.home'
         });
 
         new TxtRecord(zone, 'BlueSkyRecord', {
