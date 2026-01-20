@@ -169,14 +169,14 @@ export class DNSStack extends Stack {
     private createKirschbaumMeRecords(zone: IPublicHostedZone) {
         new HostRecord(zone, 'ExtGW', {
             zone,
-            host: 'gw-02-nue-nc',
+            host: 'gw-03-nue-nc',
             name: 'ext-gw',
             ttl: Duration.seconds(60)
         });
 
         new HostRecord(zone, 'FluxWebhookHome', {
             zone,
-            host: 'gw-02-nue-nc',
+            host: 'gw-03-nue-nc',
             name: '*.home',
             ttl: Duration.seconds(60)
         });
