@@ -1,4 +1,4 @@
-import {CfnResource, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
+import {CfnResource, Duration, RemovalPolicy, Stack, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {
     CaaAmazonRecord,
@@ -170,13 +170,15 @@ export class DNSStack extends Stack {
         new HostRecord(zone, 'ExtGW', {
             zone,
             host: 'gw-02-nue-nc',
-            name: 'ext-gw'
+            name: 'ext-gw',
+            ttl: Duration.seconds(60)
         });
 
         new HostRecord(zone, 'FluxWebhookHome', {
             zone,
             host: 'gw-02-nue-nc',
-            name: '*.home'
+            name: '*.home',
+            ttl: Duration.seconds(60)
         });
 
         new TxtRecord(zone, 'BlueSkyRecord', {
