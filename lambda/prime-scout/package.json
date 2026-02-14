@@ -2,8 +2,8 @@
   "name": "prime-scout-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.30.2",
-    "@aws-lambda-powertools/tracer": "2.30.2",
+    "@aws-lambda-powertools/logger": "2.31.0",
+    "@aws-lambda-powertools/tracer": "2.31.0",
     "@middy/core": "7.0.2",
     "@middy/http-header-normalizer": "7.0.2",
     "@middy/http-error-handler": "7.0.2",
