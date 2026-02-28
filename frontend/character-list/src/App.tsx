@@ -42,7 +42,7 @@ import {ErrorBoundary} from "react-error-boundary";
 import {
     CLASSES, CURRENT_SETS,
     DIFFUCULTY_ABBREVIATIONS,
-    FACTIONS, GENDERS, LATEST_RAID,
+    FACTIONS, GENDERS, LATEST_RAIDS,
     RACES,
     RAID_ABBREVIATIONS,
     REGIONS, SPECS,
@@ -340,7 +340,7 @@ function RaidStatus(props: {value: any}) {
         <div className={'raid-status'}>
             {
                 instances.filter(
-                    (instance: any) => instance.instance.id === LATEST_RAID || !settings.showOnlyLatestRaid
+                    (instance: any) => LATEST_RAIDS.includes(instance.instance.id) || !settings.showOnlyLatestRaid
                 ).map(
                     (instance: any) => <InstanceStatus key={instance.instance.id} {...instance} />
                 )

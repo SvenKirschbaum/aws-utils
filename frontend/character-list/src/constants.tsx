@@ -10,17 +10,17 @@ export const GENDERS = ['Female', 'Male'];
 
 export const RACES = ['Blood Elf', 'Dark Iron Dwarf', 'Dracthyr', 'Draenei', 'Dwarf', 'Earthen', 'Gnome', 'Goblin', 'Highmountain Tauren', 'Human', 'Kul Tiran', 'Lightforged Draenei', "Mag'har Orc", 'Mechagnome', 'Night Elf', 'Nightborne', 'Orc', 'Pandaren', 'Tauren', 'Troll', 'Undead', 'Void Elf', 'Vulpera', 'Worgen', 'Zandalari Troll'];
 
-export const SPECS = ['Affliction', 'Arcane', 'Arms', 'Assassination', 'Augmentation', 'Balance', 'Beast Mastery', 'Blood', 'Brewmaster', 'Demonology', 'Destruction', 'Devastation', 'Discipline', 'Elemental', 'Enhancement', 'Feral', 'Fire', 'Frost', 'Fury', 'Guardian', 'Havoc', 'Holy', 'Marksmanship', 'Mistweaver', 'Outlaw', 'Preservation', 'Protection', 'Restoration', 'Retribution', 'Shadow', 'Subtlety', 'Survival', 'Unholy', 'Vengeance', 'Windwalker'];
+export const SPECS = ['Affliction', 'Arcane', 'Arms', 'Assassination', 'Augmentation', 'Balance', 'Beast Mastery', 'Blood', 'Brewmaster', 'Demonology', 'Destruction', 'Devastation', 'Devourer', 'Discipline', 'Elemental', 'Enhancement', 'Feral', 'Fire', 'Frost', 'Fury', 'Guardian', 'Havoc', 'Holy', 'Marksmanship', 'Mistweaver', 'Outlaw', 'Preservation', 'Protection', 'Restoration', 'Retribution', 'Shadow', 'Subtlety', 'Survival', 'Unholy', 'Vengeance', 'Windwalker'];
 
 export const RAID_ABBREVIATIONS: {[key: number]: string} = {
-    1273: 'NP',
-    1296: 'LoU',
-    1302: 'MfO',
+    1307: 'VS', // Voidspire
+    1314: 'DR', // Dreamrift
+    1308: 'MQD', // March on Quel'Danas
 };
 
-export const LATEST_RAID = 1302;
+export const LATEST_RAIDS = [1307, 1314, 1308];
 
-export const CURRENT_SETS = new Set([1926, 1930, 1929, 1960, 1921, 1923, 1931, 1920, 1927, 1924, 1919, 1928, 1925, 1922/*,  Test  1875*/]);
+export const CURRENT_SETS = new Set([1983, 1984, 1989, 1985, 1990, 1982, 1978, 1980, 1987, 1979, 1988, 1981, 1986/*,  Test  1875*/]);
 
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
     'LFR': 'LFR',
