@@ -22,7 +22,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/cicd.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: cicd-app-cloud-assembly
           path: cdk.out
@@ -40,7 +40,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/dns.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: dns-app-cloud-assembly
           path: cdk.out
@@ -58,7 +58,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/domain-placeholder.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: domain-placeholder-app-cloud-assembly
           path: cdk.out
@@ -85,7 +85,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/log-redirect.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: log-redirect-app-cloud-assembly
           path: cdk.out
@@ -112,7 +112,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/prime-scout.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: prime-scout-app-cloud-assembly
           path: cdk.out
@@ -139,7 +139,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/character-list.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: character-list-app-cloud-assembly
           path: cdk.out
@@ -157,7 +157,7 @@ jobs:
       - name: Build cloud assembly
         run: npx cdk synth --app "npx ts-node --prefer-ts-exts bin/home-assistant.ts"
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: home-assistant-app-cloud-assembly
           path: cdk.out
