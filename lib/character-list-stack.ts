@@ -208,12 +208,16 @@ export class CharacterListStack extends cdk.Stack {
         const battleNetSecret = Secret.fromSecretNameV2(this, 'BattlenetCredentials', this.props.battlenetCredentialsSecretName);
         const raiderIOSecret = Secret.fromSecretNameV2(this, 'RaiderIOCredentials', this.props.raiderIOCredentialsSecretName);
 
-        const table = new TableV2(this, 'DynamoDBTable', {
+        const table = new TableV2(this, 'AccountRosterTable', {
             partitionKey: {
                 name: 'PK',
                 type: cdk.aws_dynamodb.AttributeType.STRING
             },
-            timeToLiveAttribute: 'EXPIRE'
+            sortKey: {
+                name: 'SK',
+                type: cdk.aws_dynamodb.AttributeType.STRING
+            },
+            timeToLiveAttribute: 'EXPIRE',
         })
 
         const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {

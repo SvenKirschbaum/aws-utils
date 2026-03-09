@@ -209,6 +209,9 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
             'PK': {
                 S: `PROFILE#${region}#${profileData.id}`
             },
+            'SK': {
+                S: new Date().toISOString()
+            },
             'EXPIRE': {
                 N: (Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60).toString()
             },
