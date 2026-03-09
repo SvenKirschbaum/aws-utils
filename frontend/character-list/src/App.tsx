@@ -77,7 +77,7 @@ const router = createBrowserRouter([
                     }
 
                     if(!response.ok) {
-                        throw response;
+                        throw new Response("", {status: response.status, statusText: response.statusText});
                     }
 
                     return response;
@@ -94,7 +94,7 @@ const router = createBrowserRouter([
                     const response = await fetch(`/api/snapshot/${params.token}`)
 
                     if(!response.ok) {
-                        throw response;
+                        throw new Response("", {status: response.status, statusText: response.statusText});
                     }
 
                     return response;
