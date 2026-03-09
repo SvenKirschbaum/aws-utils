@@ -201,6 +201,8 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
         raiderIOProfile: await rioPromise,
     } as any
 
+    const traceID = tracer.getRootXrayTraceId();
+
     await ddb.send(new PutItemCommand({
         TableName: process.env.TABLE_NAME,
         Item: {
@@ -212,7 +214,12 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
             },
             'DATA': {
                 M: marshall(responseBody)
-            }
+            },
+            ...(traceID && {
+                'TRACE_ID': {
+                    S: traceID
+                }
+            })
         }
     }))
 
