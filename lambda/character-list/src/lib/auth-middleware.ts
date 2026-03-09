@@ -1,5 +1,5 @@
 import { createError } from '@middy/util'
-import {parseSession, SessionPayload} from "./lib";
+import {parseSession, SessionPayload} from "./auth";
 
 export interface SessionData {
     session: SessionPayload,

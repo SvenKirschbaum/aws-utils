@@ -3,11 +3,11 @@ import middy from "@middy/core";
 import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
-import {logger, tracer} from "../util";
+import {logger, tracer} from "./lib/util";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
-import {finishOAuthAuthorization} from "./lib";
-import {originMiddleware} from "../origin-middleware";
+import {finishOAuthAuthorization} from "./lib/auth";
+import {originMiddleware} from "./lib/origin-middleware";
 
 const lambdaHandler = async function (request: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
     const clientContext = request.cookies?.filter(cookie => cookie.startsWith('authContext')).map(cookie => cookie.split('=')[1]);

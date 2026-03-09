@@ -3,16 +3,17 @@ import middy from "@middy/core";
 import httpHeaderNormalizer from "@middy/http-header-normalizer";
 import errorLogger from "@middy/error-logger";
 import httpErrorHandlerMiddleware from "@middy/http-error-handler";
-import {logger, tracer} from "./util";
+import {logger, tracer} from "./lib/util";
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware";
-import {SessionData, sessionMiddleware} from "./auth/middleware";
+import {SessionData, sessionMiddleware} from "./lib/auth-middleware";
 import httpContentNegotiation from "@middy/http-content-negotiation";
 import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
-import {getRaiderIOApiKey} from "./lib";
-import {originMiddleware} from "./origin-middleware";
+import {getRaiderIOApiKey} from "./lib/secrets";
+import {originMiddleware} from "./lib/origin-middleware";
 import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
+import {getShareToken, RosterShareTokenData} from "./lib/share";
 
 
 const REGIONS = ["eu", "us", "kr", "tw"];
@@ -183,13 +184,21 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
     const mythicKeystonePromise = fetchForEach(maxLevelCharacters, 'mythic keystone profile', (character) => fetchCharacterMythicKeystoneProfile(character, region, request.session.battleNet.access_token));
     const rioPromise = fetchForEach(maxLevelCharacters, 'RIO profile', (character) => fetchCharacterRaiderIOProfile(character, region));
 
+    const key: RosterShareTokenData = {
+        PK: `PROFILE#${region}#${profileData.id}`,
+        SK: new Date().toISOString()
+    }
+
+    const shareTokenPromise = getShareToken(key);
+
     //Wait for all promises to resolve
     await Promise.allSettled([
         raidsPromise,
         profilePromise,
         equipmentPromise,
         mythicKeystonePromise,
-        rioPromise
+        rioPromise,
+        shareTokenPromise,
     ]);
 
     const responseBody = {
@@ -207,10 +216,10 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
         TableName: process.env.TABLE_NAME,
         Item: {
             'PK': {
-                S: `PROFILE#${region}#${profileData.id}`
+                S: key.PK
             },
             'SK': {
-                S: new Date().toISOString()
+                S: key.SK
             },
             'EXPIRE': {
                 N: (Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60).toString()
@@ -231,7 +240,10 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
         headers: {
             "Cache-Control": "max-age=300, s-maxage=3600",
         },
-        body: responseBody,
+        body: {
+            shareToken: await shareTokenPromise,
+            ...responseBody
+        },
     }
 }
 

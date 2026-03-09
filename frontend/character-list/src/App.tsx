@@ -36,6 +36,7 @@ import {
 } from "@mui/x-data-grid";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import ShareButton from './ShareButton.tsx'
 import RaiderIOIcon from './assets/raider-io-icon.svg?react'
 import WoWIcon from './assets/wow-icon.svg?react'
 import wclLogoUrl from './assets/wcl-icon.png'
@@ -61,8 +62,12 @@ const router = createBrowserRouter([
             {
                 path: '/:region?',
                 loader: async ({params}) => {
-                    if (!params.region || !REGIONS.includes(params.region)) {
+                    if (!params.region) {
                         return redirect('/eu')
+                    }
+
+                    if (!REGIONS.includes(params.region)) {
+                        throw new Response("Invalid region", {status: 404});
                     }
 
                     const response = await fetch(`/api/characters/${params.region}`)
@@ -78,6 +83,23 @@ const router = createBrowserRouter([
                     return response;
                 },
                 Component: CharacterList,
+            },
+            {
+                path: '/s/:token?',
+                loader: async ({params}) => {
+                    if(!params.token) {
+                        throw new Response(null, {status: 404});
+                    }
+
+                    const response = await fetch(`/api/snapshot/${params.token}`)
+
+                    if(!response.ok) {
+                        throw response;
+                    }
+
+                    return response;
+                },
+                Component: CharacterList
             }
         ]
     },
@@ -175,6 +197,7 @@ const defaultSettings: Settings = {
 
 function CharacterList() {
     const data: {
+        shareToken: string,
         profile: any,
         raids: {[char: string]: any[]},
         characterProfile: {[char: string]: any},
@@ -304,6 +327,7 @@ function CharacterList() {
                 slotProps={{
                     footer: {
                         setKey,
+                        shareToken: data.shareToken,
                     } as any
                 }}
             />
@@ -470,17 +494,33 @@ function Footer(props: any) {
 
     return (
         <GridFooterContainer>
-            <Stack direction={"row"} justifyContent={"space-between"} width={"100%"}>
-                <Select className="region-selection" value={region} onChange={onChange} variant={"outlined"}>
-                    {REGIONS.map((region) => (
-                        <MenuItem key={region} value={region}>{region.toUpperCase()}</MenuItem>
-                    ))}
-                </Select>
-                <SettingsDialog setKey={props.setKey}></SettingsDialog>
-                <GridFooter sx={{
-                    border: 'none', // To delete double border.
-                }} >
-                </GridFooter>
+            <Stack direction={"row"} width={"100%"} alignItems={"stretch"} gap={1}>
+                <Box flex={1} display={'flex'}>
+                    {
+                        region ?
+                            <Select
+                                className="region-selection"
+                                value={region}
+                                onChange={onChange}
+                                variant={"outlined"}
+                                sx={{height: '100%'}}
+                            >
+                                {REGIONS.map((region) => (
+                                    <MenuItem key={region} value={region}>{region.toUpperCase()}</MenuItem>
+                                ))}
+                            </Select>
+                        : <div></div>
+                    }
+                </Box>
+                <Box flex={1} display={'flex'} justifyContent={'center'} alignItems={'center'}>
+                    <SettingsDialog setKey={props.setKey}></SettingsDialog>
+                </Box>
+                <Box flex={1} display={'flex'} justifyContent={'flex-end'} alignItems={'center'} gap={1}>
+                    <ShareButton shareToken={props.shareToken} />
+                    <GridFooter sx={{
+                        border: 'none', // To delete double border.
+                    }} />
+                </Box>
             </Stack>
         </GridFooterContainer>
     )
@@ -654,6 +694,9 @@ function RouteErrorView() {
                     <Stack direction={{xs: 'column', sm: 'row'}} spacing={1.5}>
                         <Button variant={'contained'} onClick={() => window.location.reload()}>
                             Reload
+                        </Button>
+                        <Button variant={'outlined'} onClick={() => window.location.assign('/')}>
+                            Go to Home
                         </Button>
                     </Stack>
                 </Stack>

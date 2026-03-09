@@ -7,6 +7,7 @@ interface Environment {
     OAUTH_CREDENTIALS_SECRET_ARN: string,
     RAIDERIO_CREDENTIALS_SECRET_ARN: string,
     ORIGIN_SECRET_ARN: string,
+    ENCRYPTION_KEY_ARN: string,
     BASE_DOMAIN: string,
     TABLE_NAME: string
 }
@@ -43,4 +44,25 @@ export async function getOriginSecret() {
     __origin_secret_value = token.SecretString;
 
     return __origin_secret_value;
+}
+
+interface OAuthCredentials {
+    client_id: string,
+    client_secret: string,
+    session_key: string,
+}
+
+let __oauth_secret_value: OAuthCredentials | undefined = undefined;
+export async function getOAuthCredentials() {
+    if (__oauth_secret_value) return __oauth_secret_value;
+
+    const token = await secretsClient.send(new GetSecretValueCommand({
+        SecretId: process.env.OAUTH_CREDENTIALS_SECRET_ARN,
+    }));
+
+    if (!token.SecretString) throw new Error('Secret is empty');
+
+    __oauth_secret_value = JSON.parse(token.SecretString) as OAuthCredentials;
+
+    return __oauth_secret_value;
 }

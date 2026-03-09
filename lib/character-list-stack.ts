@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
+import {Duration, Fn, RemovalPolicy} from 'aws-cdk-lib';
 import {R53DelegationRoleInfo} from "./constructs/util";
 import {Construct} from "constructs";
-import {Duration, Fn, RemovalPolicy} from "aws-cdk-lib";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
 import {BucketDeployment, CacheControl, Source} from "aws-cdk-lib/aws-s3-deployment";
 import {
@@ -30,6 +30,7 @@ import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {TableV2} from "aws-cdk-lib/aws-dynamodb";
+import {Key} from "aws-cdk-lib/aws-kms";
 
 export interface CharacterListStackProps extends cdk.StackProps {
     domainName: string,
@@ -203,7 +204,10 @@ export class CharacterListStack extends cdk.Stack {
 
     private createApi() {
         this.httpApi = new HttpApi(this, 'HttpApi');
+
         this.originSecret = new Secret(this, 'CloudfrontOriginSecret');
+
+        const encryptionKey = new Key(this, 'EncryptionKey', {});
 
         const battleNetSecret = Secret.fromSecretNameV2(this, 'BattlenetCredentials', this.props.battlenetCredentialsSecretName);
         const raiderIOSecret = Secret.fromSecretNameV2(this, 'RaiderIOCredentials', this.props.raiderIOCredentialsSecretName);
@@ -221,7 +225,7 @@ export class CharacterListStack extends cdk.Stack {
         })
 
         const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {
-            entry: 'lambda/character-list/src/auth/start.ts',
+            entry: 'lambda/character-list/src/auth-start.ts',
             runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
@@ -243,7 +247,7 @@ export class CharacterListStack extends cdk.Stack {
         });
 
         const authCallbackFunction = new NodejsFunction(this, 'AuthCallbackFunction', {
-            entry: 'lambda/character-list/src/auth/callback.ts',
+            entry: 'lambda/character-list/src/auth-callback.ts',
             runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
@@ -279,17 +283,44 @@ export class CharacterListStack extends cdk.Stack {
                 'RAIDERIO_CREDENTIALS_SECRET_ARN': raiderIOSecret.secretArn,
                 'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
-                'TABLE_NAME': table.tableName
+                'TABLE_NAME': table.tableName,
+                'ENCRYPTION_KEY_ARN': encryptionKey.keyArn
             }
         });
         battleNetSecret.grantRead(listCharactersFunction);
         raiderIOSecret.grantRead(listCharactersFunction);
         this.originSecret.grantRead(listCharactersFunction);
         table.grantWriteData(listCharactersFunction);
+        encryptionKey.grantEncrypt(listCharactersFunction);
 
         this.httpApi.addRoutes({
             path: '/api/characters/{region}',
             integration:  new HttpLambdaIntegration('ListCharactersIntegration', listCharactersFunction)
+        });
+
+        const getSnapshotFunction = new NodejsFunction(this, 'GetSnapshotFunction', {
+            entry: 'lambda/character-list/src/snapshot.ts',
+            runtime: Runtime.NODEJS_20_X,
+            architecture: Architecture.ARM_64,
+            logRetention: RetentionDays.THREE_DAYS,
+            timeout: Duration.seconds(10),
+            tracing: Tracing.ACTIVE,
+            memorySize: 1769,
+            environment: {
+                'BASE_DOMAIN': this.props.domainName,
+                'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
+                'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
+                'TABLE_NAME': table.tableName,
+                'ENCRYPTION_KEY_ARN': encryptionKey.keyArn
+            }
+        });
+        this.originSecret.grantRead(getSnapshotFunction);
+        table.grantReadData(getSnapshotFunction);
+        encryptionKey.grantDecrypt(getSnapshotFunction);
+
+        this.httpApi.addRoutes({
+            path: '/api/snapshot/{token}',
+            integration:  new HttpLambdaIntegration('GetSnapshotIntegration', getSnapshotFunction)
         });
     }
 }

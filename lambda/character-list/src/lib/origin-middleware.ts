@@ -1,6 +1,6 @@
 import { createError } from '@middy/util'
 import {timingSafeEqual} from "node:crypto";
-import {getOriginSecret} from "./lib";
+import {getOriginSecret} from "./secrets";
 
 
 export const originMiddleware = (opts = {}) => {

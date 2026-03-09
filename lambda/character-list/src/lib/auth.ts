@@ -1,33 +1,10 @@
 import * as oauthClient from "openid-client";
-import {GetSecretValueCommand} from "@aws-sdk/client-secrets-manager";
 import * as jose from "jose";
-import {secretsClient} from "../lib";
+import {getOAuthCredentials} from "./secrets";
 
 const OAUTH_REDIRECT_URL = `https://${process.env.BASE_DOMAIN}/api/auth/callback`;
 const OAUTH_CODE_CHALLENGE_METHOD = 'S256';
 const OAUTH_SCOPES = 'openid wow.profile';
-
-interface OAuthCredentials {
-    client_id: string,
-    client_secret: string,
-    session_key: string,
-}
-
-// Caching getter for the OAuth credentials
-let __secret_value: OAuthCredentials | undefined = undefined;
-async function getOAuthCredentials() {
-    if(__secret_value) return __secret_value;
-
-    const token = await secretsClient.send(new GetSecretValueCommand({
-        SecretId: process.env.OAUTH_CREDENTIALS_SECRET_ARN,
-    }));
-
-    if(!token.SecretString) throw new Error('Secret is empty');
-
-    __secret_value = JSON.parse(token.SecretString) as OAuthCredentials;
-
-    return __secret_value;
-}
 
 async function getSessionKey() {
     const credentials = await getOAuthCredentials();
