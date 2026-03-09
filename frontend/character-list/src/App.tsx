@@ -1,6 +1,6 @@
 import {createContext, Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import './App.css'
-import {Outlet, useLoaderData, useNavigate, useNavigation, useParams} from "react-router";
+import {Outlet, useLoaderData, useNavigate, useNavigation, useParams, useRouteError, isRouteErrorResponse} from "react-router";
 import {
     Box,
     Button,
@@ -16,11 +16,13 @@ import {
     FormGroup, FormLabel,
     Link,
     MenuItem,
+    Paper,
     Select,
     Stack,
     Switch,
     ThemeProvider,
     Tooltip,
+    Typography,
     useMediaQuery
 } from "@mui/material";
 import {
@@ -54,6 +56,7 @@ const router = createBrowserRouter([
     {
         Component: LoadingWrapper,
         hydrateFallbackElement: <LoadingIndicator />,
+        errorElement: <RouteErrorView />,
         children: [
             {
                 path: '/:region?',
@@ -568,6 +571,95 @@ function LoadingWrapper() {
     }
 
     return <Outlet />;
+}
+
+function RouteErrorView() {
+    const error = useRouteError();
+
+    const errorState = useMemo(() => {
+        if (isRouteErrorResponse(error)) {
+            const details = typeof error.data === 'string'
+                ? error.data
+                : error.data && typeof error.data === 'object' && 'message' in error.data
+                    ? String((error.data as {message?: unknown}).message)
+                    : undefined;
+
+            if (error.status === 404) {
+                return {
+                    title: 'Roster not found',
+                    message: 'That region or page could not be found. Jump back to the default region and try again.',
+                    details,
+                };
+            }
+
+            if (error.status >= 500) {
+                return {
+                    title: 'The armory had a rough pull',
+                    message: 'The character data service failed while loading the roster. A quick retry usually fixes temporary issues.',
+                    details,
+                };
+            }
+
+            return {
+                title: `Request failed (${error.status})`,
+                message: error.statusText || 'The page could not be loaded.',
+                details,
+            };
+        }
+
+        if (error instanceof Error) {
+            return {
+                title: 'Something unexpected broke',
+                message: error.message || 'An unexpected client-side error occurred while rendering the roster.',
+                details: error.stack,
+            };
+        }
+
+        return {
+            title: 'Well, that was not a clean pull',
+            message: 'Something went wrong while loading this page, but the app is still fine. Try reloading.',
+        };
+    }, [error]);
+
+    return (
+        <Box display={'flex'} alignItems={'center'} justifyContent={'center'} height={'100%'}>
+            <Paper elevation={6} sx={{maxWidth: 640, width: '100%', p: {xs: 3, md: 4}, borderRadius: 3}}>
+                <Stack spacing={2.5}>
+                    <Typography variant={'overline'} color={'primary.main'}>
+                        Character List
+                    </Typography>
+                    <Typography variant={'h4'} component={'h1'}>
+                        {errorState.title}
+                    </Typography>
+                    <Typography variant={'body1'} color={'text.secondary'}>
+                        {errorState.message}
+                    </Typography>
+                    {errorState.details && (
+                        <Typography
+                            component={'pre'}
+                            variant={'body2'}
+                            sx={{
+                                m: 0,
+                                p: 2,
+                                borderRadius: 2,
+                                bgcolor: 'action.hover',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                fontFamily: 'monospace'
+                            }}
+                        >
+                            {errorState.details}
+                        </Typography>
+                    )}
+                    <Stack direction={{xs: 'column', sm: 'row'}} spacing={1.5}>
+                        <Button variant={'contained'} onClick={() => window.location.reload()}>
+                            Reload
+                        </Button>
+                    </Stack>
+                </Stack>
+            </Paper>
+        </Box>
+    );
 }
 
 function LoadingIndicator() {
