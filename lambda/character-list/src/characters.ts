@@ -11,10 +11,15 @@ import httpResponseSerializerMiddleware from "@middy/http-response-serializer";
 import {captureLambdaHandler} from "@aws-lambda-powertools/tracer/middleware";
 import {getRaiderIOApiKey} from "./lib";
 import {originMiddleware} from "./origin-middleware";
+import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
+
 
 const REGIONS = ["eu", "us", "kr", "tw"];
 const MAX_LEVEL = 90;
 const RELEVANT_EXPANSION = 516;
+
+const ddb = tracer.captureAWSv3Client(new DynamoDBClient())
 
 const fetchForEach = async (characters: any[], type: string, fetchFunction: (character: any) => Promise<any>) => {
     const responses = await Promise.allSettled(characters.map(c => fetchFunction(c)));
@@ -187,19 +192,36 @@ const lambdaHandler = async (request: APIGatewayProxyEventV2 & SessionData): Pro
         rioPromise
     ]);
 
+    const responseBody = {
+        profile: profileData,
+        raids: await raidsPromise,
+        characterProfile: await profilePromise,
+        characterEquipment: await equipmentPromise,
+        mythicKeystoneProfile: await mythicKeystonePromise,
+        raiderIOProfile: await rioPromise,
+    } as any
+
+    await ddb.send(new PutItemCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: {
+            'PK': {
+                S: `PROFILE#${region}#${profileData.id}`
+            },
+            'EXPIRE': {
+                N: (Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60).toString()
+            },
+            'DATA': {
+                M: marshall(responseBody)
+            }
+        }
+    }))
+
     return {
         statusCode: 200,
         headers: {
             "Cache-Control": "max-age=300, s-maxage=3600",
         },
-        body: {
-            profile: profileData,
-            raids: await raidsPromise,
-            characterProfile: await profilePromise,
-            characterEquipment: await equipmentPromise,
-            mythicKeystoneProfile: await mythicKeystonePromise,
-            raiderIOProfile: await rioPromise,
-        } as any,
+        body: responseBody,
     }
 }
 

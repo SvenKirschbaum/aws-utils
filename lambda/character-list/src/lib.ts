@@ -8,6 +8,7 @@ interface Environment {
     RAIDERIO_CREDENTIALS_SECRET_ARN: string,
     ORIGIN_SECRET_ARN: string,
     BASE_DOMAIN: string,
+    TABLE_NAME: string
 }
 
 interface RaiderIOCredentials {

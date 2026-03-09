@@ -29,6 +29,7 @@ import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {Architecture, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {TableV2} from "aws-cdk-lib/aws-dynamodb";
 
 export interface CharacterListStackProps extends cdk.StackProps {
     domainName: string,
@@ -207,6 +208,14 @@ export class CharacterListStack extends cdk.Stack {
         const battleNetSecret = Secret.fromSecretNameV2(this, 'BattlenetCredentials', this.props.battlenetCredentialsSecretName);
         const raiderIOSecret = Secret.fromSecretNameV2(this, 'RaiderIOCredentials', this.props.raiderIOCredentialsSecretName);
 
+        const table = new TableV2(this, 'DynamoDBTable', {
+            partitionKey: {
+                name: 'PK',
+                type: cdk.aws_dynamodb.AttributeType.STRING
+            },
+            timeToLiveAttribute: 'EXPIRE'
+        })
+
         const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {
             entry: 'lambda/character-list/src/auth/start.ts',
             runtime: Runtime.NODEJS_20_X,
@@ -266,11 +275,13 @@ export class CharacterListStack extends cdk.Stack {
                 'RAIDERIO_CREDENTIALS_SECRET_ARN': raiderIOSecret.secretArn,
                 'ORIGIN_SECRET_ARN': this.originSecret.secretArn,
                 'POWERTOOLS_TRACER_CAPTURE_RESPONSE': 'false', // Response is usually to large
+                'TABLE_NAME': table.tableName
             }
         });
         battleNetSecret.grantRead(listCharactersFunction);
         raiderIOSecret.grantRead(listCharactersFunction);
         this.originSecret.grantRead(listCharactersFunction);
+        table.grantWriteData(listCharactersFunction);
 
         this.httpApi.addRoutes({
             path: '/api/characters/{region}',
