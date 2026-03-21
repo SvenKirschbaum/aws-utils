@@ -4,9 +4,9 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "2.31.0",
     "@aws-lambda-powertools/tracer": "2.31.0",
-    "@aws-sdk/client-dynamodb": "3.1011.0",
-    "@aws-sdk/client-kms": "3.1011.0",
-    "@aws-sdk/client-secrets-manager": "3.1011.0",
+    "@aws-sdk/client-dynamodb": "3.1012.0",
+    "@aws-sdk/client-kms": "3.1012.0",
+    "@aws-sdk/client-secrets-manager": "3.1012.0",
     "@aws-sdk/util-dynamodb": "3.996.2",
     "@middy/core": "7.1.8",
     "@middy/http-header-normalizer": "7.1.8",
