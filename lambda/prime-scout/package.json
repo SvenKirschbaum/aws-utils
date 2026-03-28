@@ -2,15 +2,15 @@
   "name": "prime-scout-lambda",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.31.0",
-    "@aws-lambda-powertools/tracer": "2.31.0",
-    "@middy/core": "7.1.8",
-    "@middy/http-header-normalizer": "7.1.8",
-    "@middy/http-error-handler": "7.1.8",
-    "@middy/http-response-serializer": "7.1.8",
-    "@middy/error-logger": "7.1.8",
-    "@middy/http-content-negotiation": "7.1.8",
-    "@middy/http-json-body-parser": "7.1.8",
+    "@aws-lambda-powertools/logger": "2.32.0",
+    "@aws-lambda-powertools/tracer": "2.32.0",
+    "@middy/core": "7.2.1",
+    "@middy/http-header-normalizer": "7.2.1",
+    "@middy/http-error-handler": "7.2.1",
+    "@middy/http-response-serializer": "7.2.1",
+    "@middy/error-logger": "7.2.1",
+    "@middy/http-content-negotiation": "7.2.1",
+    "@middy/http-json-body-parser": "7.2.1",
     "luxon": "3.7.2",
     "node-fetch": "^3.3.2",
     "jsdom": "^29.0.0"
@@ -20,6 +20,6 @@
     "@types/http-errors": "2.0.5",
     "typescript": "5.9.3",
     "@types/luxon": "3.7.1",
-    "@types/jsdom": "28.0.0"
+    "@types/jsdom": "28.0.1"
   }
 }
