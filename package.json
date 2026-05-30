@@ -16,15 +16,15 @@
     "aws-cdk": "2.1124.1",
     "esbuild": "0.28.0",
     "jest": "30.4.2",
-    "ts-jest": "29.4.10",
+    "ts-jest": "29.4.11",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "^2.256.1-alpha",
-    "@fallobst22/cdk-cross-account-route53": "^0.0.113",
-    "@trautonen/cdk-dns-validated-certificate": "0.1.49",
-    "aws-cdk-lib": "2.256.1",
+    "@aws-cdk/aws-lambda-python-alpha": "^2.257.0-alpha",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.114",
+    "@trautonen/cdk-dns-validated-certificate": "0.1.50",
+    "aws-cdk-lib": "2.257.0",
     "constructs": "10.6.0",
     "source-map-support": "0.5.21"
   }
