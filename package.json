@@ -21,10 +21,10 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "^2.259.0-alpha",
+    "@aws-cdk/aws-lambda-python-alpha": "^2.260.0-alpha",
     "@fallobst22/cdk-cross-account-route53": "^0.0.117",
     "@trautonen/cdk-dns-validated-certificate": "0.1.52",
-    "aws-cdk-lib": "2.259.0",
+    "aws-cdk-lib": "2.260.0",
     "constructs": "10.6.0",
     "source-map-support": "0.5.21"
   }
