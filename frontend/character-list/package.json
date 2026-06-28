@@ -16,12 +16,12 @@
     "react-error-boundary": "6.1.2",
     "react-router": "7.18.0",
     "react-router-dom": "7.18.0",
-    "@mui/material": "^7.0.0",
+    "@mui/material": "^9.0.0",
     "@emotion/react":  "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fontsource/roboto": "^5.0.13",
-    "@mui/icons-material": "^7.0.0",
-    "@mui/x-data-grid": "8.29.1"
+    "@mui/icons-material": "^9.0.0",
+    "@mui/x-data-grid": "9.6.0"
   },
   "devDependencies": {
     "@types/luxon": "3.7.2",
