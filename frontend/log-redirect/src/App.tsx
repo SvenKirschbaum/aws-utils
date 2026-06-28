@@ -9,7 +9,7 @@ import {
     ThemeProvider,
     useMediaQuery
 } from "@mui/material";
-import Grid from "@mui/material/GridLegacy";
+import Grid from "@mui/material/Grid";
 import React, {useEffect, useState} from "react";
 
 export const REPORT_URL_PREFIX = 'https://www.warcraftlogs.com/reports/';
@@ -66,14 +66,14 @@ function Reports() {
 
     return (
         <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid size={6}>
                 <ReportList
                     title="Raid"
                     latestPath="raid"
                     reports={data.raid}
                 />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
                 <ReportList
                     title="Mythic Plus"
                     latestPath="mythplus"
