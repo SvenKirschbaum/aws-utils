@@ -1,6 +1,17 @@
 import {createContext, Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import './App.css'
-import {Outlet, useLoaderData, useNavigate, useNavigation, useParams, useRouteError, isRouteErrorResponse} from "react-router";
+import {
+    createBrowserRouter,
+    isRouteErrorResponse,
+    Outlet,
+    redirect,
+    redirectDocument,
+    useLoaderData,
+    useNavigate,
+    useNavigation,
+    useParams,
+    useRouteError
+} from "react-router";
 import {
     Box,
     Button,
@@ -40,7 +51,7 @@ import ShareButton from './ShareButton.tsx'
 import RaiderIOIcon from './assets/raider-io-icon.svg?react'
 import WoWIcon from './assets/wow-icon.svg?react'
 import wclLogoUrl from './assets/wcl-icon.png'
-import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
+import {RouterProvider} from "react-router/dom";
 import {ErrorBoundary} from "react-error-boundary";
 import {
     CLASSES, CURRENT_SETS,
