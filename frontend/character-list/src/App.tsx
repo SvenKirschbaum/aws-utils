@@ -1,6 +1,17 @@
 import {createContext, Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import './App.css'
-import {Outlet, useLoaderData, useNavigate, useNavigation, useParams, useRouteError, isRouteErrorResponse} from "react-router";
+import {
+    createBrowserRouter,
+    isRouteErrorResponse,
+    Outlet,
+    redirect,
+    redirectDocument,
+    useLoaderData,
+    useNavigate,
+    useNavigation,
+    useParams,
+    useRouteError
+} from "react-router";
 import {
     Box,
     Button,
@@ -40,7 +51,7 @@ import ShareButton from './ShareButton.tsx'
 import RaiderIOIcon from './assets/raider-io-icon.svg?react'
 import WoWIcon from './assets/wow-icon.svg?react'
 import wclLogoUrl from './assets/wcl-icon.png'
-import {createBrowserRouter, redirect, redirectDocument, RouterProvider} from "react-router-dom";
+import {RouterProvider} from "react-router/dom";
 import {ErrorBoundary} from "react-error-boundary";
 import {
     CLASSES, CURRENT_SETS,
@@ -494,8 +505,8 @@ function Footer(props: any) {
 
     return (
         <GridFooterContainer>
-            <Stack direction={"row"} width={"100%"} alignItems={"stretch"} gap={1}>
-                <Box flex={1} display={'flex'}>
+            <Stack direction={"row"} sx={{width: '100%', alignItems: 'stretch', gap: 1}}>
+                <Box sx={{flex: 1, display: 'flex'}}>
                     {
                         region ?
                             <Select
@@ -512,10 +523,10 @@ function Footer(props: any) {
                         : <div></div>
                     }
                 </Box>
-                <Box flex={1} display={'flex'} justifyContent={'center'} alignItems={'center'}>
+                <Box sx={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                     <SettingsDialog setKey={props.setKey}></SettingsDialog>
                 </Box>
-                <Box flex={1} display={'flex'} justifyContent={'flex-end'} alignItems={'center'} gap={1}>
+                <Box sx={{flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1}}>
                     <ShareButton shareToken={props.shareToken} />
                     <GridFooter sx={{
                         border: 'none', // To delete double border.
@@ -662,7 +673,7 @@ function RouteErrorView() {
     }, [error]);
 
     return (
-        <Box display={'flex'} alignItems={'center'} justifyContent={'center'} height={'100%'}>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%'}}>
             <Paper elevation={6} sx={{maxWidth: 640, width: '100%', p: {xs: 3, md: 4}, borderRadius: 3}}>
                 <Stack spacing={2.5}>
                     <Typography variant={'overline'} color={'primary.main'}>
@@ -726,10 +737,10 @@ function MythicRating(props: {rating: number, color: {r: number, g: number, b: n
 function CharacterLinks(props: {name: string, realmSlug: string}) {
     const routeParams = useParams() as {region: string};
     return (
-        <Box display={"flex"} justifyContent={"center"} alignItems={"center"} height={"100%"} gap={"0.5rem"}>
-            <Link display={"contents"} href={`https://worldofwarcraft.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><WoWIcon className={"link-logo"} /></Link>
-            <Link display={"contents"} href={`https://raider.io/characters/${routeParams.region}/${props.realmSlug}/${props.name}`}><RaiderIOIcon className={"link-logo"} /></Link>
-            <Link display={"contents"} href={`https://www.warcraftlogs.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><img className={"link-logo"} alt={"WCL"} src={wclLogoUrl} /></Link>
+        <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', gap: '0.5rem'}}>
+            <Link sx={{display: 'contents'}} href={`https://worldofwarcraft.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><WoWIcon className={"link-logo"} /></Link>
+            <Link sx={{display: 'contents'}} href={`https://raider.io/characters/${routeParams.region}/${props.realmSlug}/${props.name}`}><RaiderIOIcon className={"link-logo"} /></Link>
+            <Link sx={{display: 'contents'}} href={`https://www.warcraftlogs.com/character/${routeParams.region}/${props.realmSlug}/${props.name}`}><img className={"link-logo"} alt={"WCL"} src={wclLogoUrl} /></Link>
         </Box>
     );
 }
