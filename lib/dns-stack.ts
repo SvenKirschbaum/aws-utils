@@ -145,13 +145,13 @@ export class DNSStack extends Stack {
     private createElite12Records(zone: IPublicHostedZone) {
         new HostRecord(zone, 'MonitoringRoot', {
             zone,
-            host: 'obs-01-vie-nc',
+            host: 'obs-04-nue-nc',
             name: 'monitoring'
         });
 
         new HostRecord(zone, 'MonitoringWildcard', {
             zone,
-            host: 'obs-01-vie-nc',
+            host: 'obs-04-nue-nc',
             name: '*.monitoring'
         });
 
