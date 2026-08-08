@@ -19,7 +19,7 @@
     "@types/aws-lambda": "8.10.162",
     "@types/http-errors": "2.0.5",
     "typescript": "6.0.3",
-    "@types/luxon": "3.7.2",
+    "@types/luxon": "3.7.3",
     "@types/jsdom": "28.0.3"
   }
 }
