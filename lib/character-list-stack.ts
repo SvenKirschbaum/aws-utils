@@ -226,7 +226,7 @@ export class CharacterListStack extends cdk.Stack {
 
         const authStartFunction = new NodejsFunction(this, 'AuthStartFunction', {
             entry: 'lambda/character-list/src/auth-start.ts',
-            runtime: Runtime.NODEJS_20_X,
+            runtime: Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
             timeout: Duration.seconds(10),
@@ -248,7 +248,7 @@ export class CharacterListStack extends cdk.Stack {
 
         const authCallbackFunction = new NodejsFunction(this, 'AuthCallbackFunction', {
             entry: 'lambda/character-list/src/auth-callback.ts',
-            runtime: Runtime.NODEJS_20_X,
+            runtime: Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
             timeout: Duration.seconds(10),
@@ -271,7 +271,7 @@ export class CharacterListStack extends cdk.Stack {
 
         const listCharactersFunction = new NodejsFunction(this, 'ListCharactersFunction', {
             entry: 'lambda/character-list/src/characters.ts',
-            runtime: Runtime.NODEJS_20_X,
+            runtime: Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
             timeout: Duration.seconds(10),
@@ -300,7 +300,7 @@ export class CharacterListStack extends cdk.Stack {
 
         const getSnapshotFunction = new NodejsFunction(this, 'GetSnapshotFunction', {
             entry: 'lambda/character-list/src/snapshot.ts',
-            runtime: Runtime.NODEJS_20_X,
+            runtime: Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             logRetention: RetentionDays.THREE_DAYS,
             timeout: Duration.seconds(10),
