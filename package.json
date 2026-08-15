@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-lambda-python-alpha": "^2.263.0-alpha",
-    "@fallobst22/cdk-cross-account-route53": "^0.0.124",
+    "@fallobst22/cdk-cross-account-route53": "^0.0.126",
     "@trautonen/cdk-dns-validated-certificate": "0.1.59",
     "aws-cdk-lib": "2.263.0",
     "constructs": "10.8.1",
