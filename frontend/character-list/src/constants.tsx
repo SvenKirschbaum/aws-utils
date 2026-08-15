@@ -16,11 +16,13 @@ export const RAID_ABBREVIATIONS: {[key: number]: string} = {
     1307: 'VS', // Voidspire
     1314: 'DR', // Dreamrift
     1308: 'MQD', // March on Quel'Danas
+    1320: 'VA', // The Venomous Abyss
+    1317: 'TG', // The Tidebound Grotto
 };
 
-export const LATEST_RAIDS = [1307, 1314, 1308];
+export const LATEST_RAIDS = [1317, 1320];
 
-export const CURRENT_SETS = new Set([1983, 1984, 1989, 1985, 1990, 1982, 1978, 1980, 1987, 1979, 1988, 1981, 1986/*,  Test  1875*/]);
+export const CURRENT_SETS = new Set([2055, 2065, 2062, 2061, 2067, 2057, 2066, 2064, 2063, 2056, 2060, 2059, 2058/*,  Test  1875*/]);
 
 export const DIFFUCULTY_ABBREVIATIONS: {[key: string]: string} = {
     'LFR': 'LFR',
