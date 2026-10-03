@@ -16,10 +16,10 @@
     "jsdom": "^30.0.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.163",
+    "@types/aws-lambda": "8.10.164",
     "@types/http-errors": "2.0.5",
     "typescript": "6.0.3",
-    "@types/luxon": "3.7.5",
+    "@types/luxon": "3.7.6",
     "@types/jsdom": "30.0.0"
   }
 }
